@@ -1,14 +1,47 @@
 import gnupg
+import os.path
+import shutil
 
-def test():
-    #key generation
-    gpg = gnupg.GPG(gnupghome='./.gnupg'#, verbose=Truei
-            )
-    gpg.encoding = 'utf-8'
-    key = gpg.gen_key(gpg.gen_key_input())
-    fp = key.fingerprint
-    print 'key=[%s], fingerprint=[%s]'% (key, fp)
-    gpg.list_keys(True)
+class GpgEncrypt:
+    def __init__(self):
+        gnupg_path = os.path.dirname(os.path.abspath(__file__))+'/.gnupg'
+        # clean up keys if exist
+        if os.path.exists(gnupg_path):
+            print 'exist'
+            shutil.rmtree(gnupg_path)
+        else:
+            print 'not exist'
+        self.exported_key_file = gnupg_path+'/exported_key.private'
+        self.gnupg_path = gnupg_path[:-7]
+        gpg = gnupg.GPG(gnupghome=gnupg_path)
+        gpg.encoding = 'utf-8'
+        key = gpg.gen_key(gpg.gen_key_input(key_type="RSA", key_length=1024))
+        self.gpg = gpg
+        self.fp = key.fingerprint
+        ascii_armored_private_keys=gpg.export_keys(self.fp, True)
+        with open(self.exported_key_file, 'w') as the_key:
+            the_key.write(ascii_armored_private_keys)
+        print 'Export pk:[%s]' % self.exported_key_file
+
+    def do_encrypt(self, file_path):
+        self.encoded_file = file_path+'.encoded'
+        savefile = file_path+'.decoded'
+        #encryption
+        with open(file_path, 'rb') as content_file:
+            data = content_file.read()
+            encrypted_ascii_data = str(self.gpg.encrypt(data, self.fp, output=self.encoded_file))
+            print 'encrypted_data=[%s]' % self.encoded_file
+            #decryption
+            self.gpg.decrypt(encrypted_ascii_data, output=savefile)
+            print 'decrypted_data=[%s]'% savefile
+    
+    def delete_key(self):
+        #delete key
+        print str(self.gpg.delete_keys(self.fp, True))
+        print str(self.gpg.delete_keys(self.fp))
+
+
+
 
 #    data = raw_input("Enter full path of file to encrypt:")
 #    rkeys = raw_input("Enter key IDs seperated by spaces:")
@@ -16,22 +49,9 @@ def test():
 #    afile = open(data, "rb")
 #    encrypted_ascii_data = gpg.encrypt_file(afile, rkeys.split(), always_trust=True, output=savefile)
 #    afile.close()
-#    input_data = gpg.gen_key_input(key_type="RSA", key_length=1024)
-#    key = gpg.gen_key(input_data)
 
-    #encryption
-    with open('./README.md', 'rb') as content_file:
-        data = content_file.read()
-        print 'raw=[%s]'%data
-        encrypted_ascii_data = gpg.encrypt(str(data),fp)
-        print 'encrypted=[%s]'%encrypted_ascii_data
-        #decryption
-        decrypted_data = gpg.decrypt(str(encrypted_ascii_data))
-        print 'decrypted_data=[%s]'%decrypted_data
-
-    #delete key
-    print str(gpg.delete_keys(fp, True))
-    print str(gpg.delete_keys(fp))
 
 if __name__ == '__main__':
-    test()
+    encryptor=GpgEncrypt()
+    encryptor.do_encrypt('/home/alice/Music/kite.mp3')
+    encryptor.delete_key()
