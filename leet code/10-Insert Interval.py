@@ -22,7 +22,6 @@ class Interval:
 
 
 class Solution(object):
-
     # 我写的这个实现简直就是渣渣中的战斗渣！！！
     # @param intervals, a list of Intervals
     # @param newInterval, a Interval
@@ -61,12 +60,12 @@ class Solution(object):
 
         for i in range(1, N):
             si, ei = intervals[i].start, intervals[i].end
-            pre_ei = intervals[i-1].end
+            pre_ei = intervals[i - 1].end
             if pre_ei < s <= si:  # interval的start在这条线段start点的外部（不包含上一个end,因为否则就要与上一个merge），更新新的start。
                 new_start = s
             elif si <= s <= ei:  # interval的start在某个interval线段上，包含头尾。更新新的start。
                 new_start = si
-            elif s < si and e > ei and i != N-1:  # 该interval包含的内部线段，都无视。
+            elif s < si and e > ei and i != N - 1:  # 该interval包含的内部线段，都无视。
                 continue
             elif s > ei:
                 fin.append(intervals[i])
@@ -81,65 +80,128 @@ class Solution(object):
             elif e < si:
                 fin.append(intervals[i])
 
-            if i == N-1 and e > ei:
+            if i == N - 1 and e > ei:
                 fin.append(Interval(new_start, e))
         return fin
 
+    # 这个实现好！先append,然后sort,然后就可以用merge intervals同样的算法。
+    @staticmethod
+    def insert_nlogn(intervals, new_interval):
+        intervals.append(new_interval)
+
+        def interval_cmp(x, y):
+            if x.start < y.start:
+                return -1
+            elif x.start > y.start:
+                return 1
+            else:
+                return 0
+
+        intervals = sorted(intervals, cmp=interval_cmp)
+        if not intervals:
+            return []
+
+        N = len(intervals)
+        cur = intervals[0]
+        fin = []
+        for i in range(1, N):
+            nxt = intervals[i]
+            # 只有这种情况没有交集，cur应该被放入结果集
+            if cur.end < nxt.start:
+                fin.append(cur)
+                cur = nxt
+            # 有交集，更新cur的尾巴
+            else:
+                cur.end = max(cur.end, nxt.end)
+        fin.append(cur)
+        return fin
 
 
 if __name__ == "__main__":
     # ==> [1,10] [15,18]
-    interval_list = [Interval(1,6), Interval(8,10), Interval(15,18)]
-    final = Solution.insert(interval_list, Interval(6,8))
+    interval_list = [Interval(1, 6), Interval(8, 10), Interval(15, 18)]
+    final = Solution.insert(interval_list, Interval(6, 8))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(6, 8))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [1,2],[3,5],[6,7],[8,10],[12,16] ==> [1,2] [3,10] [12,16]
-    interval_list = [Interval(1,2), Interval(3,5), Interval(6,7), Interval(8,10), Interval(12,16)]
-    final = Solution.insert(interval_list, Interval(4,9))
+    interval_list = [Interval(1, 2), Interval(3, 5), Interval(6, 7), Interval(8, 10), Interval(12, 16)]
+    final = Solution.insert(interval_list, Interval(4, 9))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(4, 9))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[1,5]], [2,3] ==> [[1,5]]
-    interval_list = [Interval(1,5)]
-    final = Solution.insert(interval_list, Interval(2,3))
+    interval_list = [Interval(1, 5)]
+    final = Solution.insert(interval_list, Interval(2, 3))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(2, 3))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[1,5], [6,8]], [0,9] ==> [[0,9]]
-    interval_list = [Interval(1,5), Interval(6,8)]
-    final = Solution.insert(interval_list, Interval(0,9))
+    interval_list = [Interval(1, 5), Interval(6, 8)]
+    final = Solution.insert(interval_list, Interval(0, 9))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(0, 9))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[0,5],[8,9]], [3,4] ==> [[0,5],[8,9]]
-    interval_list = [Interval(0,5), Interval(8,9)]
-    final = Solution.insert(interval_list, Interval(3,4))
+    interval_list = [Interval(0, 5), Interval(8, 9)]
+    final = Solution.insert(interval_list, Interval(3, 4))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(3, 4))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[0,2],[3,3],[6,11]], [9,15] ==> [[0,2],[3,3],[6,15]]
-    interval_list = [Interval(0,2), Interval(3,3), Interval(6,11)]
-    final = Solution.insert(interval_list, Interval(9,15))
+    interval_list = [Interval(0, 2), Interval(3, 3), Interval(6, 11)]
+    final = Solution.insert(interval_list, Interval(9, 15))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(9, 15))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[0,0],[1,3],[5,11]], [0,3] ==> [[0,3],[5,11]]
-    interval_list = [Interval(0,0), Interval(1,3), Interval(5,11)]
-    final = Solution.insert(interval_list, Interval(0,3))
+    interval_list = [Interval(0, 0), Interval(1, 3), Interval(5, 11)]
+    final = Solution.insert(interval_list, Interval(0, 3))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(0, 3))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
 
     # [[0,4],[7,12]], [0,5] ==> [[0,5],[7,12]]
-    interval_list = [Interval(0,4), Interval(7,12)]
-    final = Solution.insert(interval_list, Interval(0,5))
+    interval_list = [Interval(0, 4), Interval(7, 12)]
+    final = Solution.insert(interval_list, Interval(0, 5))
+    for inte in final:
+        print "[%d,%d]" % (inte.start, inte.end),
+    print "<==>",
+    final = Solution.insert_nlogn(interval_list, Interval(0, 5))
     for inte in final:
         print "[%d,%d]" % (inte.start, inte.end),
     print
