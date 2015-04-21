@@ -35,20 +35,29 @@ class TreeNode:
 
 
 class Solution(object):
+    @staticmethod
+    def iter_bst(root, left, right):
+        if not root:
+            return True
+        if root.val >= right or root.val <= left:
+            return False
+        else:
+            return Solution.iter_bst(root.left, left, root.val) and Solution.iter_bst(root.right, root.val, right)
     # @param root, a tree node
     # @return a boolean
     @staticmethod
-    def is_valid_bst(root):  # time cost is logN, where N is num of tree elements
-        if not root:
-            return True
+    def is_valid_bst(root):  # time cost is N, where N is num of tree elements
+        import sys
+        return Solution.iter_bst(root, -sys.maxint-1, sys.maxint)
+
 
 
 if __name__ == "__main__":
     r = TreeNode(1)
-    r.left = TreeNode(2)
+    r.left = TreeNode(-2)
     r.right = TreeNode(3)
-    r.right.left = TreeNode(4)
-    r.right.left.right = TreeNode(5)
+    r.right.left = TreeNode(2)
+    r.right.left.right = TreeNode(2.5)
     print Solution.is_valid_bst(r)
 
     r1 = TreeNode(10)
@@ -56,4 +65,6 @@ if __name__ == "__main__":
     r1.right = TreeNode(15)
     r1.right.left = TreeNode(6)
     r1.right.right = TreeNode(20)
-    print Solution.is_valid_bst(r1)
+    r0 = TreeNode(9)
+    r0.right = r1
+    print Solution.is_valid_bst(r0)
