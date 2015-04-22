@@ -1,3 +1,4 @@
+#coding=utf-8
 """
 Given two words (beginWord and endWord), and a dictionary, find the length of shortest
 transformation sequence from beginWord to endWord, such that:
