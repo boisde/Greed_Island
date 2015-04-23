@@ -39,17 +39,17 @@ class Solution(object):
     @staticmethod
     def preorder_traversal_iter(root):
         import collections
-        pre_que, result = collections.deque([]), []
+        pre_stack, result = collections.deque([]), []
         if not root:
             return result
-        pre_que.append(root)
-        while pre_que:
-            cur = pre_que.popleft()
+        pre_stack.append(root)
+        while pre_stack:
+            cur = pre_stack.pop()
             result.append(cur.val)
-            if cur.left:
-                pre_que.append(cur.left)
             if cur.right:
-                pre_que.append(cur.right)
+                pre_stack.append(cur.right)
+            if cur.left:
+                pre_stack.append(cur.left)
         return result
 
 
