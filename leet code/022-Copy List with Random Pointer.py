@@ -41,3 +41,4 @@ class Solution(object):
             cur = cur.next
         new_head = list_dict[head]
         return new_head
+    # TODO 应该有个更好的解，不用hash来做。
