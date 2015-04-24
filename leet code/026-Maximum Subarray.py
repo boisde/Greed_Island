@@ -9,3 +9,15 @@ More practice:
 If you have figured out the O(n) solution, try coding another solution using
 the divide and conquer approach, which is more subtle.
 """
+
+
+class Solution(object):
+    # @param {integer[]} nums
+    # @return {integer}
+    @staticmethod
+    def max_sub_array(nums):
+        ending_here_sum, cur_max = nums[0], nums[0]
+        for i in range(1, len(nums)):
+            ending_here_sum = max(ending_here_sum+nums[i], nums[i])
+            cur_max = max(cur_max, ending_here_sum)
+        return cur_max
