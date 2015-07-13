@@ -54,3 +54,6 @@ docs/_build/
 
 # pycharm generated
 .idea/
+
+# mac generated
+.DS_STORE
