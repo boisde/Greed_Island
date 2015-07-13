@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import logging
@@ -50,7 +51,7 @@ class RotatingFileHandlerCustomHeader(logging.handlers.RotatingFileHandler):
     def __init__(self, filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=0, utc=False, header_msg=None):
         super(RotatingFileHandlerCustomHeader, self).__init__(filename, mode, maxBytes, backupCount, encoding, delay)
         self.suffix = "%Y-%m-%d_%H-%M-%S.log"
-        self.ext_match = r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$"
+        self.ext_match = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}.log$")
         self.utc = utc
         self.header_msg = header_msg
 
