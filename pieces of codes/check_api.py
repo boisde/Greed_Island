@@ -52,7 +52,7 @@ urls = [
                                         "top_image_id": "dd21f2714125d228d7226640a8862be3",
                                         "to_city_code": "330100000000", "to_level": "2,3,4", "to_type": 1,
                                         "news_type": 2}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
-    ("PATCH", ag + "/staff/cloud/news/6", {"top": 1}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
+    ("PATCH", ag + "/staff/cloud/news/18", {"status": 1},{"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
 ]
 total, ok_cnt, err_cnt, timeout_cnt = len(urls), 0, 0, 0
 
@@ -71,12 +71,10 @@ for url in urls:
         signal.alarm(2)
         if url[0] == "GET":
             r = requests.get(url[1], params=url[2], headers=url[3] if len(url) == 4 else None)
-        elif url[0] == "POST":
-            r = requests.post(url[1], data=json.dumps(url[2]),
-                              headers={'content-type': 'application/json'}.update(url[3] if len(url) == 4 else {}))
-        elif url[0] == "PATCH":
-            r = requests.patch(url[1], data=json.dumps(url[2]),
-                               headers={'content-type': 'application/json'}.update(url[3] if len(url) == 4 else {}))
+        elif url[0] in ("POST", "PATCH"):
+            headers = {'content-type': 'application/json'}
+            headers.update(url[3] if len(url) == 4 else {})
+            r = requests.request(str(url[0]).lower(), url[1], data=json.dumps(url[2]), headers=headers)
         else:
             total -= 1
             r = None
