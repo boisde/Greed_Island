@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # coding:utf-8
-
+from __future__ import print_function
 # optparse is Python 2.3 - 2.6, deprecated in 2.7
 # For 2.7+ use http://docs.python.org/library/argparse.html#module-argparse
 from optparse import OptionParser
 import requests
 import json
 import signal
+import sys
 
 # Exit statuses recognized by Nagios
 UNKNOWN = -1
@@ -52,7 +53,7 @@ urls = [
                                         "top_image_id": "dd21f2714125d228d7226640a8862be3",
                                         "to_city_code": "330100000000", "to_level": "2,3,4", "to_type": 1,
                                         "news_type": 2}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
-    ("PATCH", ag + "/staff/cloud/news/18", {"status": 1},{"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
+    ("PATCH", ag + "/staff/cloud/news/18", {"status": 1}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
 ]
 total, ok_cnt, err_cnt, timeout_cnt = len(urls), 0, 0, 0
 
@@ -81,7 +82,7 @@ for url in urls:
     except UserWarning:
         timeout_cnt += 1
     else:
-        print "[%s] [%s]: [%d] [%s]" % (url[0], url[1], r.status_code, r.text[:20])
+        print("[%s] [%s]: [%d] [%s]" % (url[0], url[1], r.status_code, r.text[:20]), file=sys.stderr)
         if r.status_code == 200:
             ok_cnt += 1
         else:
@@ -91,12 +92,11 @@ for url in urls:
 # Using the example -m parameter parsed from commandline
 pass_rate = float(ok_cnt) / total
 if 0.8 < pass_rate < 0.9:
-    print 'WARN - (%d/%d) failed, (%d/%d) timed out.' % (err_cnt, total, timeout_cnt, total)
+    print('WARN - (%d/%d) passed, (%d/%d) failed, (%d/%d) timed out.' % (ok_cnt, total, err_cnt, total, timeout_cnt, total))
     raise SystemExit, WARNING
 elif pass_rate <= 0.8:
-    print 'CRITICAL - (%d/%d) failed, (%d/%d) timed out.' % (err_cnt, total, timeout_cnt, total)
+    print('CRITICAL - (%d/%d) passed, (%d/%d) failed, (%d/%d) timed out.' % (ok_cnt, total, err_cnt, total, timeout_cnt, total))
     raise SystemExit, CRITICAL
 else:
-    print 'OK - (%d/%d) %s, (%d/%d) failed, (%d/%d) timed out.' % (ok_cnt, total, options.message, err_cnt, total,
-                                                                   timeout_cnt, total)
+    print('OK - (%d/%d) passed, (%d/%d) failed, (%d/%d) timed out.' % (ok_cnt, total, err_cnt, total, timeout_cnt, total))
     raise SystemExit, OK
