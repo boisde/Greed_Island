@@ -47,7 +47,7 @@ urls = [
     # API Gateway #
     ("GET", ag + "/staff/app/news?count=6&page=1&status=3", {},
      {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
-    ("POST", ag + "/staff/cloud/news", {"title": "dddd风课堂：硬汉也要学防暑", "body": "风先生们，夏日挑战来袭，一定要注意防暑防晒，身体好才能多送单！",
+    ("POST", ag + "/staff/cloud/news", {"title": "风课堂：硬汉也要学防暑", "body": "风先生们，夏日挑战来袭，一定要注意防暑防晒，身体好才能多送单！",
                                         "image_id": "a1a5b8136fb625e6ca26fed442d56547",
                                         "link": "http://nr.123feng.com/?p=2403",
                                         "top_image_id": "dd21f2714125d228d7226640a8862be3",
@@ -56,26 +56,16 @@ urls = [
     ("PATCH", ag + "/staff/cloud/news/18", {"status": 1}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
 ]
 total, ok_cnt, err_cnt, timeout_cnt = len(urls), 0, 0, 0
-
-
-def handler(signum, frame):
-    # print "timeout %f" % time.time()
-    raise UserWarning("end of time")
-
-
-# Register the signal function handler
-signal.signal(signal.SIGALRM, handler)
+TIMEOUT = 1  # 1 second
 
 for url in urls:
     try:
-        # Define a timeout in seconds
-        signal.alarm(2)
         if url[0] == "GET":
-            r = requests.get(url[1], params=url[2], headers=url[3] if len(url) == 4 else None)
+            r = requests.get(url[1], params=url[2], headers=url[3] if len(url) == 4 else None, timeout=TIMEOUT)
         elif url[0] in ("POST", "PATCH"):
             headers = {'content-type': 'application/json'}
             headers.update(url[3] if len(url) == 4 else {})
-            r = requests.request(str(url[0]).lower(), url[1], data=json.dumps(url[2]), headers=headers)
+            r = requests.request(str(url[0]).lower(), url[1], data=json.dumps(url[2]), headers=headers, timeout=TIMEOUT)
         else:
             total -= 1
             r = None
