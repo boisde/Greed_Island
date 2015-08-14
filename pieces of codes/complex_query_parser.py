@@ -78,5 +78,6 @@ if __name__ == '__main__':
         ]
     }
     put_my_args_here = []
-    print json_to_query_str(expr_json_example, put_my_args_here)
-    print put_my_args_here
+    print "In [1]:\n %s\n\n" % expr_json_example
+    print "Out [1]:\n %s\n" % json_to_query_str(expr_json_example, put_my_args_here)
+    print "Out [2]:\n %s" % put_my_args_here

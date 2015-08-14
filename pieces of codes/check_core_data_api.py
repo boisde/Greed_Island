@@ -22,7 +22,7 @@ parser.add_option("-m", "--message", dest="message", default='passed', help="A m
 
 # INIT
 core = "http://182.92.232.171:5555"
-ag = "http://123.57.40.134:5556"
+# ag = "http://123.57.40.134:5556"
 urls = [
     # 风先生 #
     ("GET", core + "/staff/token/a30b36d7ebe553bcccc795e67ebe5c3c", {}),
@@ -45,15 +45,15 @@ urls = [
      {"filter_col": ["user"], "org_kn": [], "org_kvs": [], "info_kn": ["user"], "info_kvs": [[7749772]],
       "which_page": 0, "each_fetch": 1}),
     # API Gateway #
-    ("GET", ag + "/staff/app/news?count=6&page=1&status=3", {},
-     {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
-    ("POST", ag + "/staff/cloud/news", {"title": "风课堂：硬汉也要学防暑", "body": "风先生们，夏日挑战来袭，一定要注意防暑防晒，身体好才能多送单！",
-                                        "image_id": "a1a5b8136fb625e6ca26fed442d56547",
-                                        "link": "http://nr.123feng.com/?p=2403",
-                                        "top_image_id": "dd21f2714125d228d7226640a8862be3",
-                                        "to_city_code": "330100000000", "to_level": "2,3,4", "to_type": 1,
-                                        "news_type": 2}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
-    ("PATCH", ag + "/staff/cloud/news/18", {"status": 1}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
+    # ("GET", ag + "/staff/app/news?count=6&page=1&status=3", {},
+    #  {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
+    # ("POST", ag + "/staff/cloud/news", {"title": "风课堂：硬汉也要学防暑", "body": "风先生们，夏日挑战来袭，一定要注意防暑防晒，身体好才能多送单！",
+    #                                     "image_id": "a1a5b8136fb625e6ca26fed442d56547",
+    #                                     "link": "http://nr.123feng.com/?p=2403",
+    #                                     "top_image_id": "dd21f2714125d228d7226640a8862be3",
+    #                                     "to_city_code": "330100000000", "to_level": "2,3,4", "to_type": 1,
+    #                                     "news_type": 2}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
+    # ("PATCH", ag + "/staff/cloud/news/18", {"status": 1}, {"Authorization": "token 0b3d4a5819526224f60592cffd2c1ed6"}),
 ]
 total, ok_cnt, err_cnt, timeout_cnt = len(urls), 0, 0, 0
 TIMEOUT = 1  # 1 second
