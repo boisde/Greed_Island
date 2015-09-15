@@ -14,9 +14,9 @@ from lib.redis_key import key_deliver_auto_quit_absent_days
 from lib.timezone import TimeZone
 from lib.glogging import GLogging
 
-
+from bisect import bisect
 class DeliverUtils(object):
-    height_score = {
+    height_score_map = {
         # 男
         1: {
             1: 3,  # 180以上
@@ -33,34 +33,28 @@ class DeliverUtils(object):
             3: 3,  # 155~159
             # 0: -1  # 155以下/其他 不通过
         }
-    }.get(sex, {height: 0}).get(height, -1)
+    }
 
-
-    @classmethod
-    def _cal_age_score(cls, age):
-        if age == 0:
-            return 0
-        elif 18 <= age < 22:
-            return 8
-        elif 22 <= age <= 42:
-            return 10
-        else:
-            return -1
+    for age in [-1, 0, 1, 17, 18, 19, 22, 42, 43, 1000]:
+        from bisect import bisect
+        # age=0, 0分; 18 <= age < 22, 8分; 22 <= age <= 42, 10分; 其它, -1分.
+        age_score = [-1, 0, -1, 8, 10, -1][bisect([0, 1, 18, 22, 43], age)]
+        print ("age=[%d], score=[%d]" % (age, age_score))
 
     @classmethod
-    def calc_score(cls, apply_info):
+    def calc_score(cls, sex, height, age):
         """
         计算分数
         @param apply_info: ApplyDeliver对象
         @return: int
         """
         score = 0
-        height_score = cls._cal_height_score(apply_info.sex, apply_info.height)
+        height_score = cls.height_score_map.get(sex, {height: 0}).get(height, -1)
         if height_score < 0:
             return height_score
         else:
             score += height_score
-        age_score = cls._cal_age_score(apply_info.age)
+        age_score = [-1, 0, -1, 8, 10, -1][bisect([0, 1, 18, 22, 43], age)]
         if age_score < 0:
             return age_score
         else:
@@ -68,14 +62,14 @@ class DeliverUtils(object):
         return score
 
     @classmethod
-    def calc_age(cls, apply_info):
+    def calc_age(cls, id_card_num):
         """
         计算年龄
         :param apply_info: ApplyDeliver对象
         :return: int
         """
         age = 0
-        id_num = apply_info.id_card_num
+        id_num = id_card_num
         if id_num:
             try:
                 birth_year = int(str(id_num)[6:10])
