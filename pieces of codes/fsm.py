@@ -110,9 +110,9 @@ class DeliverFSM(object):
     # 配送员状态
     ################################################
     # 初始状态
-    CHECK_STATUS_INIT = 'CHECK_INIT'
+    CHECK_STATUS_INIT = 1 # 'CHECK_INIT'
     # 城市未开通
-    CHECK_STATUS_NO_AREA_MANAGER = 'CHECK_NO_AREA_MANAGER'
+    CHECK_STATUS_NO_AREA_MANAGER = 2 # 'CHECK_NO_AREA_MANAGER'
     # 评分未通过
     CHECK_STATUS_REGISTERED_DENY = 'CHECK_REGISTERED_DENY'
     # WEB注册
@@ -160,11 +160,11 @@ class DeliverFSM(object):
 
     # 过渡期的老状态
     # 人力面试拒绝
-    CHECK_STATUS_HR_INTERVIEWED_DENY = 'CHECK_HR_INTERVIEWED_DENY'
+    # CHECK_STATUS_HR_INTERVIEWED_DENY = 'CHECK_HR_INTERVIEWED_DENY'
     # 人力面试通过
-    CHECK_STATUS_HR_INTERVIEWED = 'CHECK_HR_INTERVIEWED'
-    # 已注册
-    CHECK_STATUS_REGISTERED = "CHECK_REGISTERED"
+    # CHECK_STATUS_HR_INTERVIEWED = 'CHECK_HR_INTERVIEWED'
+    # # 已注册
+    # CHECK_STATUS_REGISTERED = "CHECK_REGISTERED"
 
     # 状态名称映射表
     CHECK_STATUS_NAME_MAP = {
@@ -194,8 +194,6 @@ class DeliverFSM(object):
         CHECK_STATUS_RETAIN: u'停职',
         CHECK_STATUS_RETAIN_RESIGN: u'停职申请离职',
         CHECK_STATUS_NO_FIRST_ORDER: u'7日未入职',
-        # 以下是过渡期的老状态
-        CHECK_STATUS_REGISTERED: u"旧版流程的评分通过",
     }
 
     ################################################
@@ -266,7 +264,7 @@ class DeliverFSM(object):
     # 申请离职
     EVENT_APPLY_RESIGN = 15
     # 人事经理判定辞退
-    EVENT_HM_DECIDE_QUITE = 16
+    EVENT_HM_DECIDE_QUIT = 16
     # 人事经理判定留职
     EVENT_HM_DECIDE_RETAIN = 17
     # 连续3天旷工
@@ -288,127 +286,99 @@ class DeliverFSM(object):
     # 注册时系统判定全职申请
     EVENT_SYSTEM_JUMP_FULL_TIME = 27
     # 注册时系统判定全职申请然后被拒绝回到初始状态
-    EVENT_SYSTEM_JUMP_INIT = 28
+    # EVENT_SYSTEM_JUMP_INIT = 28
 
-    # TODO:以下两个事件是通过trigger在别的事件执行的时候调用的
-    # 离职被拒绝返回working(需接首单)
-    EVENT_SYSTEM_DENY_QUIT_TO_WORKING = 30
-    # 离职被拒绝返回已邦队
-    EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM = 31
+    # # TODO:以下两个事件是通过trigger在别的事件执行的时候调用的
+    # # 离职被拒绝返回working(需接首单)
+    # EVENT_SYSTEM_DENY_QUIT_TO_WORKING = 30
+    # # 离职被拒绝返回已邦队
+    # EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM = 31
 
     # 风先生申请离职然后自己撤销
-    EVENT_APPLY_RESIGN_CANCEL_WITH_FIRST_ORDER = 32     # 返回已邦队且有首单
-    EVENT_APPLY_RESIGN_CANCEL_ONLY_BOUND_TEAM = 33      # 返回仅绑队但是没有首单
+    EVENT_CANCEL_RESIGN = 28
+    # EVENT_APPLY_RESIGN_CANCEL_WITH_FIRST_ORDER = 32     # 返回已邦队且有首单
+    # EVENT_APPLY_RESIGN_CANCEL_ONLY_BOUND_TEAM = 33      # 返回仅绑队但是没有首单
 
     # 风人力反馈面试结果
-    EVENT_HRBP_INTERVIEW = 34
+    EVENT_HRBP_INTERVIEW = 29
 
     # 状态转换字典, 元素结构: (初始状态，条件): 下一个状态
     FSM = {
-        (CHECK_STATUS_INIT, EVENT_CITY_SCORE_WEB_YES): CHECK_STATUS_WEB_REGISTERED,
         (CHECK_STATUS_INIT, EVENT_CITY_NO): CHECK_STATUS_NO_AREA_MANAGER,
         (CHECK_STATUS_INIT, EVENT_CITY_SCORE_NO): CHECK_STATUS_REGISTERED_DENY,
+        (CHECK_STATUS_INIT, EVENT_CITY_SCORE_WEB_YES): CHECK_STATUS_WEB_REGISTERED,
         (CHECK_STATUS_INIT, EVENT_CITY_SCORE_APP_YES): CHECK_STATUS_APP_REGISTERED,
 
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
+        (CHECK_STATUS_WEB_REGISTERED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_WEB_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
         (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,
         (CHECK_STATUS_WEB_REGISTERED, EVENT_HR_CHECK_YES): CHECK_STATUS_PART_TIME_WORKING,
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
 
-        (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
-        (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,
-        (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_YES): CHECK_STATUS_PART_TIME_WORKING,
-        (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
         (CHECK_STATUS_APP_REGISTERED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
+        (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,  # 完结状态?
+        (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_YES): CHECK_STATUS_PART_TIME_WORKING,
+        (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
+
+        # 注册的时候选择全职则自动进入全职审核状态
+        (CHECK_STATUS_APP_REGISTERED, EVENT_SYSTEM_JUMP_FULL_TIME): CHECK_STATUS_APPLY_FULL_TIME,  # TODO 不自己生成事件,反而让FE/APP调接口.
+        (CHECK_STATUS_WEB_REGISTERED, EVENT_SYSTEM_JUMP_FULL_TIME): CHECK_STATUS_APPLY_FULL_TIME,  # TODO 不自己生成事件,反而让FE/APP调接口.
 
         (CHECK_STATUS_PART_TIME_WORKING, EVENT_APPLY_FULL_TIME): CHECK_STATUS_APPLY_FULL_TIME,
 
+        (CHECK_STATUS_APPLY_FULL_TIME, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
         (CHECK_STATUS_APPLY_FULL_TIME, EVENT_BIND_HRBP): CHECK_STATUS_WAIT_INTERVIEW,
 
-        # (CHECK_STATUS_WAIT_INTERVIEW, EVENT_COMPLETE_INFO): CHECK_STATUS_WAIT_INFO_COMPLETED,
-        # (CHECK_STATUS_WAIT_INTERVIEW, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_PART_TIME_WORKING,
-        # (CHECK_STATUS_WAIT_INTERVIEW, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_PENDING,
-
+        (CHECK_STATUS_WAIT_INTERVIEW, EVENT_MC_RETURN_TO_PART_TIME): CHECK_STATUS_INIT,  # 注册的时候选择全职，然后分别在人力、管控被拒绝
         (CHECK_STATUS_WAIT_INTERVIEW, EVENT_HRBP_INTERVIEW): CHECK_STATUS_HRBP_INTERVIEWED,
 
-        (CHECK_STATUS_WAIT_INFO_COMPLETED, EVENT_COMPLETE_INFO): CHECK_STATUS_HR_INTERVIEWED,
-        # (CHECK_STATUS_WAIT_INFO_COMPLETED, EVENT_BIND_HRBP): CHECK_STATUS_WAIT_INTERVIEW,
+
+        # (CHECK_STATUS_WAIT_INFO_COMPLETED, EVENT_COMPLETE_INFO): CHECK_STATUS_HR_INTERVIEWED,  # 完结状态?
         (CHECK_STATUS_WAIT_INFO_COMPLETED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_HRBP_INTERVIEWED,
 
-        # (CHECK_STATUS_HR_INTERVIEWED, EVENT_HR_CHECK_YES): CHECK_STATUS_PENDING,
-        # (CHECK_STATUS_HR_INTERVIEWED, EVENT_HR_CHECK_NO): CHECK_STATUS_PENDING_DENY,
-        # (CHECK_STATUS_HR_INTERVIEWED, EVENT_HR_DECIDE_INFO_INCOMPLETED): CHECK_STATUS_WAIT_INFO_COMPLETED,
-
+        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_MC_RETURN_TO_PART_TIME): CHECK_STATUS_INIT,  # 注册的时候选择全职，然后分别在人力、管控被拒绝
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_COMPLETE_INFO): CHECK_STATUS_WAIT_INFO_COMPLETED,
+        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_BANNED): CHECK_STATUS_BANNED,
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_PART_TIME_WORKING,
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_UNALLOCATED,
-        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_BANNED): CHECK_STATUS_BANNED,
 
-        # (CHECK_STATUS_PENDING, EVENT_MC_CHECK_YES): CHECK_STATUS_UNALLOCATED,
-        # (CHECK_STATUS_PENDING, EVENT_MC_CHECK_NO): CHECK_STATUS_UNALLOCATED_DENY,
-        # (CHECK_STATUS_PENDING, EVENT_MC_RETURN): CHECK_STATUS_HR_INTERVIEWED,
-        # (CHECK_STATUS_PENDING, EVENT_BANNED): CHECK_STATUS_BANNED,
-        # (CHECK_STATUS_PENDING, EVENT_COMPLETE_INFO): CHECK_STATUS_WAIT_INFO_COMPLETED,
-        # (CHECK_STATUS_PENDING, EVENT_MC_RETURN_TO_PART_TIME): CHECK_STATUS_PART_TIME_WORKING,
-
+        (CHECK_STATUS_UNALLOCATED, EVENT_BANNED): CHECK_STATUS_BANNED,
         (CHECK_STATUS_UNALLOCATED, EVENT_BIND_TREE): CHECK_STATUS_BINDING_TEAM,
 
-        (CHECK_STATUS_BINDING_TEAM, EVENT_ADOPT_FIRST_ORDER): CHECK_STATUS_WORKING,
-        (CHECK_STATUS_BINDING_TEAM, EVENT_CONTINUE_NO_FIRST_ORDER): CHECK_STATUS_NO_FIRST_ORDER,
         (CHECK_STATUS_BINDING_TEAM, EVENT_UNBIND_TREE): CHECK_STATUS_UNALLOCATED,
-
-        (CHECK_STATUS_WORKING, EVENT_APPLY_RESIGN): CHECK_STATUS_RESIGN,
+        (CHECK_STATUS_BINDING_TEAM, EVENT_BANNED): CHECK_STATUS_BANNED,
         (CHECK_STATUS_BINDING_TEAM, EVENT_APPLY_RESIGN): CHECK_STATUS_RESIGN,
-        (CHECK_STATUS_WORKING, EVENT_CONTINUE_ABSENT): CHECK_STATUS_RECOMMEND_QUIT,
-        (CHECK_STATUS_WORKING, EVENT_WARNING): CHECK_STATUS_ELIMINATED,
+        (CHECK_STATUS_BINDING_TEAM, EVENT_CONTINUE_NO_FIRST_ORDER): CHECK_STATUS_NO_FIRST_ORDER,  # 定时任务: 7天不接单
+        (CHECK_STATUS_BINDING_TEAM, EVENT_ADOPT_FIRST_ORDER): CHECK_STATUS_WORKING,  # KEY
 
-        (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_QUITE): CHECK_STATUS_QUITED,
+        (CHECK_STATUS_WORKING, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_WORKING, EVENT_APPLY_RESIGN): CHECK_STATUS_RESIGN,
+        (CHECK_STATUS_WORKING, EVENT_CONTINUE_ABSENT): CHECK_STATUS_RECOMMEND_QUIT,  # 定时任务: 3天没接单
+        (CHECK_STATUS_WORKING, EVENT_WARNING): CHECK_STATUS_ELIMINATED,  #淘汰配送员, 可以不维护
+
         (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING,
+        (CHECK_STATUS_RESIGN, EVENT_CANCEL_RESIGN): CHECK_STATUS_WORKING,  # 申请离职撤销  todo recheck
+        # (CHECK_STATUS_RESIGN, EVENT_CANCEL_RESIGN): CHECK_STATUS_WORKING,   # todo recheck
         (CHECK_STATUS_RESIGN, EVENT_BANNED): CHECK_STATUS_BANNED,
-        # 申请离职撤销
-        (CHECK_STATUS_RESIGN, EVENT_APPLY_RESIGN_CANCEL_WITH_FIRST_ORDER): CHECK_STATUS_WORKING,
-        (CHECK_STATUS_RESIGN, EVENT_APPLY_RESIGN_CANCEL_ONLY_BOUND_TEAM): CHECK_STATUS_WORKING,
+        (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_QUITED,  # HM是什么;此处改为QUIT可否(DB中event存储在哪里)
 
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_QUITE): CHECK_STATUS_BANNED,
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING,
-        (CHECK_STATUS_RESIGN, EVENT_SYSTEM_DENY_QUIT_TO_WORKING): CHECK_STATUS_WORKING,
-        (CHECK_STATUS_RESIGN, EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM): CHECK_STATUS_BINDING_TEAM,
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_WORKING): CHECK_STATUS_WORKING,
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM): CHECK_STATUS_BINDING_TEAM,
+        # (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM): CHECK_STATUS_BINDING_TEAM, # TODO 推荐离职,暂时还保留; 可能以后会没有用
+        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING/CHECK_STATUS_BINDING_TEAM, # TODO lamda first_order_time: CHECK_STATUS_WORKING if first_order_time else CHECK_STATUS_BINDING_TEAM
+        # (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_WORKING): CHECK_STATUS_WORKING, # TODO
+        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_BANNED,
 
-        (CHECK_STATUS_ELIMINATED, EVENT_HM_DECIDE_QUITE): CHECK_STATUS_RETAIN,
         (CHECK_STATUS_ELIMINATED, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING,
+        (CHECK_STATUS_ELIMINATED, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_RETAIN,  # ??? 留职待查 ???
 
         (CHECK_STATUS_RETAIN, EVENT_APPLY_RESIGN): CHECK_STATUS_RETAIN_RESIGN,
 
-        (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_QUITE): CHECK_STATUS_QUITED,
         (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_RETAIN,
+        (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_QUITED,
 
-        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_QUITE): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_BANNED,
         (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_BINDING_TEAM,
 
-        # 注册的时候选择全职则自动进入全职审核状态
-        (CHECK_STATUS_APP_REGISTERED, EVENT_SYSTEM_JUMP_FULL_TIME): CHECK_STATUS_APPLY_FULL_TIME,
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_SYSTEM_JUMP_FULL_TIME): CHECK_STATUS_APPLY_FULL_TIME,
-        (CHECK_STATUS_APPLY_FULL_TIME, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
-
-        # 注册的时候选择全职，然后分别在人力、管控被拒绝
-        (CHECK_STATUS_WAIT_INTERVIEW, EVENT_SYSTEM_JUMP_INIT): CHECK_STATUS_INIT,
-        # (CHECK_STATUS_PENDING, EVENT_SYSTEM_JUMP_INIT): CHECK_STATUS_INIT,
-        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_SYSTEM_JUMP_INIT): CHECK_STATUS_INIT,
-
-
-        # 过渡时期的临时状态变更方案
-        # 评分通过 (人事经理面试通过) -> 人事经理面试通过
-        (CHECK_STATUS_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_HR_INTERVIEWED,
-        # 评分通过 (人事经理面试拒绝) -> 人事经理面试拒绝
-        (CHECK_STATUS_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,
-
-
-        (CHECK_STATUS_UNALLOCATED, EVENT_BANNED): CHECK_STATUS_BANNED,
-        (CHECK_STATUS_BINDING_TEAM, EVENT_BANNED): CHECK_STATUS_BANNED,
-        (CHECK_STATUS_WORKING, EVENT_BANNED): CHECK_STATUS_BANNED,
     }
 
     # === 创建real_info记录的入口状态，事件 ===
@@ -420,14 +390,15 @@ class DeliverFSM(object):
     REAL_INFO_ENTRY_STATUS += [i for i in FSM.keys() if FSM[i] == CHECK_STATUS_APPLY_FULL_TIME]
 
     @classmethod
-    def get_next_status(cls, current_status, condition):
+    def get_next_status(cls, current_status, condition, **kwargs):
         """
         获取下一状态
         @param current_status: 当前状态
         @param condition: 条件
         @return: 如果返回None表示错误状态或条件
         """
-        return cls.FSM.get((current_status, condition), None)
+        state = cls.FSM.get((current_status, condition), None)
+        return state if isinstance(state, int) else state(**kwargs)
 
     @classmethod
     def update_check_status(cls, obj, condition, current_status=None, **kwargs):
@@ -449,12 +420,9 @@ class DeliverFSM(object):
             deliver_ri = RealInfo.get(user_id=obj.user_id)
             if deliver_ri:
                 obj = deliver_ri
-        next_status = cls.get_next_status(current_status, condition)
-        if next_status in [DeliverFSM.CHECK_STATUS_BANNED, DeliverFSM.CHECK_STATUS_QUITED]:
-            org_info = DeliverOrg.get(user_id=obj.user_id)
-            if org_info:
-                org_info.user_id = 0
-                org_info.save()
+        next_status = cls.get_next_status(current_status, condition, **kw)
+
+        # 日志
         debug_str = "{user_id}: from {current_status} to {next_status}, conditon: {condition}".format(
             user_id=obj.user_id,
             current_status=current_status,
@@ -462,10 +430,17 @@ class DeliverFSM(object):
             condition=condition
         )
         GLogging.async_write_log(GLogging.REGISTER_LOGGER, debug_str)
+
+        # 解绑该配送员
+        if next_status in [DeliverFSM.CHECK_STATUS_BANNED, DeliverFSM.CHECK_STATUS_QUITED]:
+            org_info = DeliverOrg.get(user_id=obj.user_id)
+            if org_info:
+                org_info.user_id = 0
+                org_info.save()
+
         if next_status:
             # === 判断当前状态是否转换兼职为全职
-            if obj.check_status == DeliverFSM.CHECK_STATUS_PENDING and (
-                        next_status == DeliverFSM.CHECK_STATUS_UNALLOCATED):
+            if obj.check_status == DeliverFSM.CHECK_STATUS_PENDING and (next_status == DeliverFSM.CHECK_STATUS_UNALLOCATED):
                 obj.job_type = RealInfo.FULL_TIME
                 obj.qualified_work_time = TimeZone.utc_now()
                 obj.quit_time = None
@@ -506,7 +481,7 @@ class DeliverFSM(object):
                 if from_status == FSM_k[0] and condition == FSM_k[1]:
                     cls.pass_deliver(obj.user_id)
 
-            # 记录日志
+            # 日志
             DeliverFSMLog.objects.create(
                 user_id=obj.user_id,
                 executor_id=kwargs.get('executor_id', 0),
@@ -516,55 +491,11 @@ class DeliverFSM(object):
                 remark=kwargs.get('remark', '')
             )
             # 进入分配中心处理
-            cls.dispatch_to_center(obj)
+            # cls.dispatch_to_center(obj)
             return obj
         else:
             return None
 
-    @classmethod
-    def dispatch_to_center(cls, obj):
-        """
-        进入分配中心
-        @param obj: ApplyDeliver 或 RealInfo 对象
-        @return:
-        """
-        status = obj.check_status
-        # WEB注册状态/APP注册状态,进入分配中心, ApplyDeliver
-        if status in (cls.CHECK_STATUS_WEB_REGISTERED, cls.CHECK_STATUS_APP_REGISTERED):
-            # 寻找合适的人事经理
-            city_hr = DeliverUtils.find_city_hr_manager(obj)
-            if city_hr is None:
-                return None
-            city_hr_info = get_staff_info(user_id=city_hr.manager_user_id)
-            # 插入记录
-            DispatchRecord.objects.create(
-                user_id=obj.user_id,
-                name=obj.name,
-                city=obj.city,
-                check_status=obj.check_status,
-                push_to_user_id=city_hr.manager_user_id if city_hr.manager_user_id else 0,
-                push_to_name=city_hr_info.get('name', '') if isinstance(city_hr_info, dict) else "",
-            )
-        # 申请离职状态,进入分配中心
-        elif status == cls.CHECK_STATUS_RESIGN:
-            # TODO
-            pass
-        # 推荐自离状态,进入分配中心
-        elif status == cls.CHECK_STATUS_RECOMMEND_QUIT:
-            # TODO
-            pass
-        # 建议淘汰状态，进入分配中心
-        elif status == cls.CHECK_STATUS_ELIMINATED:
-            # TODO
-            pass
-        # 停职申请离职状态，进入分配中心
-        elif status == cls.CHECK_STATUS_RETAIN_RESIGN:
-            # TODO
-            pass
-        # 7天未入职状态，进入分配中心
-        elif status == cls.CHECK_STATUS_NO_FIRST_ORDER:
-            # TODO
-            pass
 
     @classmethod
     def pass_deliver(cls, deliver_id):

@@ -3,6 +3,7 @@ from trollius import From
 import time
 import requests
 
+
 @trollius.coroutine
 def greet_every_two_seconds(loop):
     time0 = time.time()
@@ -62,3 +63,5 @@ time_all = time.time() - time_all
 print("[all-serical] since=[%s]\n" % int(time_all*1000))
 
 
+import threading
+lock = threading.RLock()
