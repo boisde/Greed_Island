@@ -1,108 +1,48 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-from mm_common.user_center.models.dispatch_center import DispatchRecord
-from mm_common.area_center.models.city import CityHRManagerRelation
-from mm_common.event_center.models.deliver_fsm_log import DeliverFSMLog
-from mm_common.user_center.models.deliver_images import DeliverImage
-from mm_common.user_center.models.real_info import RealInfo
-from mm_common.user_center.models.apply_deliver import ApplyDeliver
-from mm_common.user_center.models.deliver_org import DeliverOrg
-from lib.gedis import Redis
-from lib.utils.node_utils import get_staff_info
-from lib.redis_key import key_deliver_auto_quit_absent_days
-from lib.timezone import TimeZone
-from lib.glogging import GLogging
+# from mm_common.user_center.models.dispatch_center import DispatchRecord
+# from mm_common.area_center.models.city import CityHRManagerRelation
+# from mm_common.event_center.models.deliver_fsm_log import DeliverFSMLog
+# from mm_common.user_center.models.deliver_images import DeliverImage
+# from mm_common.user_center.models.real_info import RealInfo
+# from mm_common.user_center.models.apply_deliver import ApplyDeliver
+# from mm_common.user_center.models.deliver_org import DeliverOrg
+# from lib.gedis import Redis
+# from lib.utils.node_utils import get_staff_info
+# from lib.redis_key import key_deliver_auto_quit_absent_days
+# from lib.timezone import TimeZone
+# from lib.glogging import GLogging
 
 from bisect import bisect
-class DeliverUtils(object):
-    height_score_map = {
-        # 男
-        1: {
-            1: 3,  # 180以上
-            2: 5,  # 170~180
-            3: 3,  # 165~169
-            4: 1,  # 165以下
-            5: 1,  # 160~164
-            # 0: -1  # 160以下/其他 不通过
-        },
-        # 女
-        2: {
-            1: 3,  # 170 以上
-            2: 5,  # 160~170
-            3: 3,  # 155~159
-            # 0: -1  # 155以下/其他 不通过
-        }
-    }
-
-    for age in [-1, 0, 1, 17, 18, 19, 22, 42, 43, 1000]:
-        from bisect import bisect
-        # age=0, 0分; 18 <= age < 22, 8分; 22 <= age <= 42, 10分; 其它, -1分.
-        age_score = [-1, 0, -1, 8, 10, -1][bisect([0, 1, 18, 22, 43], age)]
-        print ("age=[%d], score=[%d]" % (age, age_score))
-
-    @classmethod
-    def calc_score(cls, sex, height, age):
-        """
-        计算分数
-        @param apply_info: ApplyDeliver对象
-        @return: int
-        """
-        score = 0
-        height_score = cls.height_score_map.get(sex, {height: 0}).get(height, -1)
-        if height_score < 0:
-            return height_score
-        else:
-            score += height_score
-        age_score = [-1, 0, -1, 8, 10, -1][bisect([0, 1, 18, 22, 43], age)]
-        if age_score < 0:
-            return age_score
-        else:
-            score += age_score
-        return score
-
-    @classmethod
-    def calc_age(cls, id_card_num):
-        """
-        计算年龄
-        :param apply_info: ApplyDeliver对象
-        :return: int
-        """
-        age = 0
-        id_num = id_card_num
-        if id_num:
-            try:
-                birth_year = int(str(id_num)[6:10])
-                current_year = TimeZone.local_now().year
-                age = current_year - birth_year
-            except Exception as e:
-                print e
-                age = 0
-        return age
-
-    @classmethod
-    def find_city_hr_manager(cls, obj):
-        """
-        寻找合适的人事经理
-        @param obj: ApplyDeliver 或 RealInfo对象
-        @return: CityHRManagerRelation对象
-        """
-        city_hr = CityHRManagerRelation.filter(city_code=obj.city_code, district_code=obj.district_code)
-        if not city_hr.exists():
-            return None
-        return city_hr[0]
-
-    @classmethod
-    def city_is_open(cls, obj):
-        """
-        判断城市是否开通
-        @param obj: ApplyDeliver 或 RealInfo对象
-        @return: True / False
-        """
-        return cls.find_city_hr_manager(obj) is not None
+# class DeliverUtils(object):
+#     height_score_map = {
+#         # 男
+#         1: {
+#             1: 3,  # 180以上
+#             2: 5,  # 170~180
+#             3: 3,  # 165~169
+#             4: 1,  # 165以下
+#             5: 1,  # 160~164
+#             # 0: -1  # 160以下/其他 不通过
+#         },
+#         # 女
+#         2: {
+#             1: 3,  # 170 以上
+#             2: 5,  # 160~170
+#             3: 3,  # 155~159
+#             # 0: -1  # 155以下/其他 不通过
+#         }
+#     }
+#
+#     for age in [-1, 0, 1, 17, 18, 19, 22, 42, 43, 1000]:
+#         from bisect import bisect
+#         # age=0, 0分; 18 <= age < 22, 8分; 22 <= age <= 42, 10分; 其它, -1分.
+#         age_score = [-1, 0, -1, 8, 10, -1][bisect([0, 1, 18, 22, 43], age)]
+#         print ("age=[%d], score=[%d]" % (age, age_score))
 
 
-class DeliverFSM(object):
+class StaffFSM(object):
     """
     配送员有限状态机
     """
@@ -130,9 +70,9 @@ class DeliverFSM(object):
     # 资料待补全
     CHECK_STATUS_WAIT_INFO_COMPLETED = 'CHECK_WAIT_INFO_COMPLETED'
     # 人力审核通过
-    CHECK_STATUS_PENDING = 'CHECK_PENDING'
+    # CHECK_STATUS_PENDING = 'CHECK_PENDING'
     # 人力审核拒绝
-    CHECK_STATUS_PENDING_DENY = 'CHECK_PENDING_DENY'
+    # CHECK_STATUS_PENDING_DENY = 'CHECK_PENDING_DENY'
     # 管控审核通过
     CHECK_STATUS_UNALLOCATED = 'CHECK_UNALLOCATED'
     # 管控审核拒绝
@@ -176,12 +116,12 @@ class DeliverFSM(object):
         CHECK_STATUS_PART_TIME_WORKING: u'兼职审核通过',
         CHECK_STATUS_APPLY_FULL_TIME: u'申请全职待审核',
         CHECK_STATUS_WAIT_INTERVIEW: u'申请全职待面试',
-        CHECK_STATUS_HR_INTERVIEWED_DENY: u'人力面试拒绝',
-        CHECK_STATUS_HR_INTERVIEWED: u'人力面试通过',
+        # CHECK_STATUS_HR_INTERVIEWED_DENY: u'人力面试拒绝',
+        # CHECK_STATUS_HR_INTERVIEWED: u'人力面试通过',
         CHECK_STATUS_HRBP_INTERVIEWED: u'已面试',
         CHECK_STATUS_WAIT_INFO_COMPLETED: u'资料待补全',
-        CHECK_STATUS_PENDING: u'人力审核通过',
-        CHECK_STATUS_PENDING_DENY: u'人力审核拒绝',
+        # CHECK_STATUS_PENDING: u'人力审核通过',
+        # CHECK_STATUS_PENDING_DENY: u'人力审核拒绝',
         CHECK_STATUS_UNALLOCATED: u'管控审核通过',
         CHECK_STATUS_UNALLOCATED_DENY: u'管控审核拒绝',
         CHECK_STATUS_BINDING_TEAM: u'已绑定小队',
@@ -220,9 +160,9 @@ class DeliverFSM(object):
     ]
     # 待上岗的状态集合
     WAIT_WORKING_STATUS_LIST = [
-        CHECK_STATUS_REGISTERED, CHECK_STATUS_HR_INTERVIEWED,
-        CHECK_STATUS_PENDING, CHECK_STATUS_WEB_REGISTERED,
-        CHECK_STATUS_APP_REGISTERED, CHECK_STATUS_WAIT_INFO_COMPLETED,
+        # CHECK_STATUS_REGISTERED, CHECK_STATUS_HR_INTERVIEWED,
+        # CHECK_STATUS_PENDING,
+        CHECK_STATUS_WEB_REGISTERED, CHECK_STATUS_APP_REGISTERED, CHECK_STATUS_WAIT_INFO_COMPLETED,
         CHECK_STATUS_UNALLOCATED, CHECK_STATUS_APPLY_FULL_TIME, CHECK_STATUS_WAIT_INTERVIEW
     ]
 
@@ -248,13 +188,13 @@ class DeliverFSM(object):
     # 后台人力审核拒绝
     EVENT_HR_CHECK_NO = 9
     # 后台人力判定资料不全
-    EVENT_HR_DECIDE_INFO_INCOMPLETED = 10
+    # EVENT_HR_DECIDE_INFO_INCOMPLETED = 10
     # 后台管控审核通过
-    EVENT_MC_CHECK_YES = 11
+    # EVENT_MC_CHECK_YES = 11
     # 后台管控审核拒绝
-    EVENT_MC_CHECK_NO = 12
+    # EVENT_MC_CHECK_NO = 12
     # 后台管控审核退回
-    EVENT_MC_RETURN = 22
+    # EVENT_MC_RETURN = 22
     # 后台配送架构绑定
     EVENT_BIND_TREE = 13
     # 后台配送架构解绑
@@ -302,6 +242,69 @@ class DeliverFSM(object):
     # 风人力反馈面试结果
     EVENT_HRBP_INTERVIEW = 29
 
+
+    # 定义CallBack
+    # === 判断当前状态是否转换兼职为全职
+    @classmethod
+    def _parttime_to_fulltime(cls, **kw):
+        return cls.CHECK_STATUS_UNALLOCATED
+    # if obj.check_status == DeliverFSM.CHECK_STATUS_HRBP_INTERVIEWED and (next_status == DeliverFSM.CHECK_STATUS_UNALLOCATED):
+    #     obj.job_type = RealInfo.FULL_TIME
+    #     obj.qualified_work_time = TimeZone.utc_now()
+    #     obj.quit_time = None
+    #     obj.first_order_time = None
+    #     obj.save(update_fields=['job_type', 'qualified_work_time', 'quit_time', 'first_order_time'])
+
+    # === 判断当前操作是否为离职
+    @classmethod
+    def _quitting(cls, **kw):
+        from_state = kw.get('from_state', None)
+        if from_state == cls.CHECK_STATUS_NO_FIRST_ORDER:
+            # 离职且拉黑
+            cls._ban(**{'staff_id': kw.get('staff_id', None)})
+            return cls.CHECK_STATUS_BANNED
+        else:
+            return cls.CHECK_STATUS_QUITED
+    # if next_status == DeliverFSM.CHECK_STATUS_QUITED or (
+    #         obj.check_status == DeliverFSM.CHECK_STATUS_NO_FIRST_ORDER and (
+    #                     next_status == DeliverFSM.CHECK_STATUS_BANNED)):
+    #     obj.quit_time = TimeZone.utc_now()
+    #     obj.save(update_fields=['quit_time'])
+    #     # 解绑架构
+    #     DeliverOrg.filter(user_id=obj.user_id).update(user_id=None)
+
+    # === 判断当前操作是否为拉黑，拉黑除状态修改之外，还需要修改quit_time和banned字段
+    @classmethod
+    def _ban(cls, **kw):
+
+        return cls.CHECK_STATUS_BANNED
+    # if next_status == DeliverFSM.CHECK_STATUS_BANNED and isinstance(obj, RealInfo):
+    #     obj.quit_time = TimeZone.utc_now()
+    #     obj.banned = True
+    #     obj.save(update_fields=['banned', 'quit_time'])
+    #     # 解绑架构
+    #     DeliverOrg.filter(user_id=obj.user_id).update(user_id=None)
+
+    # === 判断当前操作是否拒绝系统自动推荐离职，拒绝系统推荐离职的同时需要清理缓存
+    @classmethod
+    def _handle_system_recommend_quit(cls, **kw):
+        first_order_time = kw.get('first_order_time', None)
+
+        if first_order_time:
+            # todo clear old redis key
+            return cls.CHECK_STATUS_WORKING
+        else:
+            return cls.CHECK_STATUS_BINDING_TEAM
+
+    # if obj.check_status == DeliverFSM.CHECK_STATUS_RECOMMEND_QUIT and (
+    #             next_status == DeliverFSM.CHECK_STATUS_WORKING):
+    #     user_id = obj.user.id
+    #     key = key_deliver_auto_quit_absent_days.format(user_id=user_id)
+    #     redis_client = Redis()
+    #     redis_client.delete(key)
+
+
+
     # 状态转换字典, 元素结构: (初始状态，条件): 下一个状态
     FSM = {
         (CHECK_STATUS_INIT, EVENT_CITY_NO): CHECK_STATUS_NO_AREA_MANAGER,
@@ -309,15 +312,15 @@ class DeliverFSM(object):
         (CHECK_STATUS_INIT, EVENT_CITY_SCORE_WEB_YES): CHECK_STATUS_WEB_REGISTERED,
         (CHECK_STATUS_INIT, EVENT_CITY_SCORE_APP_YES): CHECK_STATUS_APP_REGISTERED,
 
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_WEB_REGISTERED, EVENT_BANNED): _ban,
         (CHECK_STATUS_WEB_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
-        (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,
+        # (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,
         (CHECK_STATUS_WEB_REGISTERED, EVENT_HR_CHECK_YES): CHECK_STATUS_PART_TIME_WORKING,
         (CHECK_STATUS_WEB_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
 
-        (CHECK_STATUS_APP_REGISTERED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_APP_REGISTERED, EVENT_BANNED): _ban,
         (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_NO): CHECK_STATUS_INIT,
-        (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,  # 完结状态?
+        # (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_HR_INTERVIEWED_DENY,  # 完结状态?
         (CHECK_STATUS_APP_REGISTERED, EVENT_HR_CHECK_YES): CHECK_STATUS_PART_TIME_WORKING,
         (CHECK_STATUS_APP_REGISTERED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_WAIT_INFO_COMPLETED,
 
@@ -339,34 +342,31 @@ class DeliverFSM(object):
 
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_MC_RETURN_TO_PART_TIME): CHECK_STATUS_INIT,  # 注册的时候选择全职，然后分别在人力、管控被拒绝
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_COMPLETE_INFO): CHECK_STATUS_WAIT_INFO_COMPLETED,
-        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_BANNED): _ban,
         (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_HM_INTERVIEW_NO): CHECK_STATUS_PART_TIME_WORKING,
-        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_HM_INTERVIEW_YES): CHECK_STATUS_UNALLOCATED,
+        (CHECK_STATUS_HRBP_INTERVIEWED, EVENT_HM_INTERVIEW_YES): _parttime_to_fulltime,  # todo 需要维护'job_type', 'qualified_work_time', 'quit_time', 'first_order_time'
 
-        (CHECK_STATUS_UNALLOCATED, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_UNALLOCATED, EVENT_BANNED): _ban,
         (CHECK_STATUS_UNALLOCATED, EVENT_BIND_TREE): CHECK_STATUS_BINDING_TEAM,
 
         (CHECK_STATUS_BINDING_TEAM, EVENT_UNBIND_TREE): CHECK_STATUS_UNALLOCATED,
-        (CHECK_STATUS_BINDING_TEAM, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_BINDING_TEAM, EVENT_BANNED): _ban,
         (CHECK_STATUS_BINDING_TEAM, EVENT_APPLY_RESIGN): CHECK_STATUS_RESIGN,
         (CHECK_STATUS_BINDING_TEAM, EVENT_CONTINUE_NO_FIRST_ORDER): CHECK_STATUS_NO_FIRST_ORDER,  # 定时任务: 7天不接单
         (CHECK_STATUS_BINDING_TEAM, EVENT_ADOPT_FIRST_ORDER): CHECK_STATUS_WORKING,  # KEY
 
-        (CHECK_STATUS_WORKING, EVENT_BANNED): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_WORKING, EVENT_BANNED): _ban,
         (CHECK_STATUS_WORKING, EVENT_APPLY_RESIGN): CHECK_STATUS_RESIGN,
         (CHECK_STATUS_WORKING, EVENT_CONTINUE_ABSENT): CHECK_STATUS_RECOMMEND_QUIT,  # 定时任务: 3天没接单
         (CHECK_STATUS_WORKING, EVENT_WARNING): CHECK_STATUS_ELIMINATED,  #淘汰配送员, 可以不维护
 
         (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING,
         (CHECK_STATUS_RESIGN, EVENT_CANCEL_RESIGN): CHECK_STATUS_WORKING,  # 申请离职撤销  todo recheck
-        # (CHECK_STATUS_RESIGN, EVENT_CANCEL_RESIGN): CHECK_STATUS_WORKING,   # todo recheck
-        (CHECK_STATUS_RESIGN, EVENT_BANNED): CHECK_STATUS_BANNED,
-        (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_QUITED,  # HM是什么;此处改为QUIT可否(DB中event存储在哪里)
+        (CHECK_STATUS_RESIGN, EVENT_BANNED): _ban,
+        (CHECK_STATUS_RESIGN, EVENT_HM_DECIDE_QUIT): _quitting,  # HM是什么;此处改为QUIT可否(DB中event存储在哪里)
 
-        # (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_BINDING_TEAM): CHECK_STATUS_BINDING_TEAM, # TODO 推荐离职,暂时还保留; 可能以后会没有用
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING/CHECK_STATUS_BINDING_TEAM, # TODO lamda first_order_time: CHECK_STATUS_WORKING if first_order_time else CHECK_STATUS_BINDING_TEAM
-        # (CHECK_STATUS_RECOMMEND_QUIT, EVENT_SYSTEM_DENY_QUIT_TO_WORKING): CHECK_STATUS_WORKING, # TODO
-        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_BANNED,
+        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_RETAIN): _handle_system_recommend_quit, # TODO 推荐离职,暂时还保留; 可能以后会没有用
+        (CHECK_STATUS_RECOMMEND_QUIT, EVENT_HM_DECIDE_QUIT): _ban,
 
         (CHECK_STATUS_ELIMINATED, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_WORKING,
         (CHECK_STATUS_ELIMINATED, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_RETAIN,  # ??? 留职待查 ???
@@ -374,12 +374,21 @@ class DeliverFSM(object):
         (CHECK_STATUS_RETAIN, EVENT_APPLY_RESIGN): CHECK_STATUS_RETAIN_RESIGN,
 
         (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_RETAIN,
-        (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_QUITED,
+        (CHECK_STATUS_RETAIN_RESIGN, EVENT_HM_DECIDE_QUIT): _quitting,
 
-        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_QUIT): CHECK_STATUS_BANNED,
-        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_BINDING_TEAM,
+        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_QUIT): _quitting,  # _quitting 且 _ban
+        (CHECK_STATUS_NO_FIRST_ORDER, EVENT_HM_DECIDE_RETAIN): CHECK_STATUS_BINDING_TEAM
 
     }
+
+
+
+
+
+
+
+
+
 
     # === 创建real_info记录的入口状态，事件 ===
     # === 如果需要修改real_info的初始状态， 修改if后面即可 ===
@@ -423,13 +432,13 @@ class DeliverFSM(object):
         next_status = cls.get_next_status(current_status, condition, **kw)
 
         # 日志
-        debug_str = "{user_id}: from {current_status} to {next_status}, conditon: {condition}".format(
-            user_id=obj.user_id,
-            current_status=current_status,
-            next_status=next_status,
-            condition=condition
-        )
-        GLogging.async_write_log(GLogging.REGISTER_LOGGER, debug_str)
+        # debug_str = "{user_id}: from {current_status} to {next_status}, conditon: {condition}".format(
+        #     user_id=obj.user_id,
+        #     current_status=current_status,
+        #     next_status=next_status,
+        #     condition=condition
+        # )
+        # GLogging.async_write_log(GLogging.REGISTER_LOGGER, debug_str)
 
         # 解绑该配送员
         if next_status in [DeliverFSM.CHECK_STATUS_BANNED, DeliverFSM.CHECK_STATUS_QUITED]:
@@ -440,38 +449,14 @@ class DeliverFSM(object):
 
         if next_status:
             # === 判断当前状态是否转换兼职为全职
-            if obj.check_status == DeliverFSM.CHECK_STATUS_PENDING and (next_status == DeliverFSM.CHECK_STATUS_UNALLOCATED):
-                obj.job_type = RealInfo.FULL_TIME
-                obj.qualified_work_time = TimeZone.utc_now()
-                obj.quit_time = None
-                obj.first_order_time = None
-                obj.save(update_fields=['job_type', 'qualified_work_time', 'quit_time', 'first_order_time'])
 
             # === 判断当前操作是否为离职
-            if next_status == DeliverFSM.CHECK_STATUS_QUITED or (
-                    obj.check_status == DeliverFSM.CHECK_STATUS_NO_FIRST_ORDER and (
-                                next_status == DeliverFSM.CHECK_STATUS_BANNED)):
-                obj.quit_time = TimeZone.utc_now()
-                obj.save(update_fields=['quit_time'])
-                # 解绑架构
-                DeliverOrg.filter(user_id=obj.user_id).update(user_id=None)
 
             # === 判断当前操作是否为拉黑，拉黑除状态修改之外，还需要修改quit_time和banned字段
-            if next_status == DeliverFSM.CHECK_STATUS_BANNED and isinstance(obj, RealInfo):
-                obj.quit_time = TimeZone.utc_now()
-                obj.banned = True
-                obj.save(update_fields=['banned', 'quit_time'])
-                # 解绑架构
-                DeliverOrg.filter(user_id=obj.user_id).update(user_id=None)
 
             # === 判断当前操作是否拒绝系统自动推荐离职，拒绝系统推荐离职的同时需要清理缓存
-            if obj.check_status == DeliverFSM.CHECK_STATUS_RECOMMEND_QUIT and (
-                        next_status == DeliverFSM.CHECK_STATUS_WORKING):
-                user_id = obj.user.id
-                key = key_deliver_auto_quit_absent_days.format(user_id=user_id)
-                redis_client = Redis()
-                redis_client.delete(key)
 
+            # 更新状态
             from_status = obj.check_status
             obj.check_status = next_status
             obj.save(update_fields=['check_status'])
@@ -497,34 +482,34 @@ class DeliverFSM(object):
             return None
 
 
-    @classmethod
-    def pass_deliver(cls, deliver_id):
-        """
-        生成real_info记录, 参照古老的pass_deliver
-        :param deliver_id:
-        :return:
-        """
-        app_id = 883
-        apply_info = ApplyDeliver.get(user_id=deliver_id)
-        user_id = apply_info.user_id
-        image = DeliverImage.get(app_id=app_id, user__id=user_id)
-        real_info = RealInfo.get(app_id=app_id, user__id=user_id, deleted=False)
-        if not real_info:
-            # 仅当real_info没有创建记录的时候才创建
-            RealInfo.create(
-                app_id=app_id,
-                user_id=user_id,
-                id_images=image.id_image if image else "",
-                real_name=apply_info.name,
-                gravatar=image.avatar if image else "",
-                location=apply_info.location,
-                city=apply_info.city,
-                city_code=apply_info.city_code,
-                province_code=apply_info.province_code,
-                province=apply_info.province,
-                district_code=apply_info.district_code,
-                district=apply_info.district,
-                check_status=apply_info.check_status,
-                job_type=apply_info.job_type,
-                deliver_category=apply_info.deliver_category
-            )
+    # @classmethod
+    # def pass_deliver(cls, deliver_id):
+    #     """
+    #     生成real_info记录, 参照古老的pass_deliver
+    #     :param deliver_id:
+    #     :return:
+    #     """
+    #     app_id = 883
+    #     apply_info = ApplyDeliver.get(user_id=deliver_id)
+    #     user_id = apply_info.user_id
+    #     image = DeliverImage.get(app_id=app_id, user__id=user_id)
+    #     real_info = RealInfo.get(app_id=app_id, user__id=user_id, deleted=False)
+    #     if not real_info:
+    #         # 仅当real_info没有创建记录的时候才创建
+    #         RealInfo.create(
+    #             app_id=app_id,
+    #             user_id=user_id,
+    #             id_images=image.id_image if image else "",
+    #             real_name=apply_info.name,
+    #             gravatar=image.avatar if image else "",
+    #             location=apply_info.location,
+    #             city=apply_info.city,
+    #             city_code=apply_info.city_code,
+    #             province_code=apply_info.province_code,
+    #             province=apply_info.province,
+    #             district_code=apply_info.district_code,
+    #             district=apply_info.district,
+    #             check_status=apply_info.check_status,
+    #             job_type=apply_info.job_type,
+    #             deliver_category=apply_info.deliver_category
+    #         )

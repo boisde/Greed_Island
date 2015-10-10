@@ -207,3 +207,16 @@ events = [
     ('clear', 'yellow', 'green')
 ]
 fsm = Fysom(initial=CHECK_STATUS_INIT, events=events)
+
+
+class A(object):
+    def a(**kw):
+        return 1
+
+    FSM = {
+            (CHECK_STATUS_INIT, EVENT_CITY_NO): CHECK_STATUS_NO_AREA_MANAGER,
+            (CHECK_STATUS_INIT, EVENT_CITY_SCORE_NO): a,
+            (CHECK_STATUS_INIT, EVENT_CITY_SCORE_WEB_YES): CHECK_STATUS_WEB_REGISTERED
+    }
+
+print A.FSM[(CHECK_STATUS_INIT, EVENT_CITY_SCORE_NO)]()
