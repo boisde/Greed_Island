@@ -53,7 +53,7 @@ class PayrollGradeLogic(object):
         return tip_goals
 
     @classmethod
-    def get_grade_spots_per_middle_team(cls, mid_team_size):
+    def old_get_grade_spots_per_middle_team(cls, mid_team_size):
         # mid_team_size: [1:6), [6:11), [11:16), [16:21), [21:max)
         mid_team_size_spots = [[0, 0, 0], [0, 0, 1], [0, 1, 2], [1, 2, 3], [1, 2, 4], [1, 3, 5]][
             bisect([1, 6, 11, 16, 21], mid_team_size)]
@@ -61,7 +61,15 @@ class PayrollGradeLogic(object):
         return mid_team_size_spots
 
     @classmethod
-    def grade_man(cls, tip, level, tip_goal):
+    def get_grade_rank_requirement_per_middle_team(cls, middle_team_size):
+        # mid_team_size: [1:6), [6:11), [11:16), [16:21), [21:max)
+        rank_requirement = [[0, 0, 0], [0, 0, 1], [0, 1, 2], [1, 2, 3], [1, 2, 4], [1, 3, 5]][
+            bisect([1, 6, 11, 16, 21], middle_team_size)]
+        print ("mid_team_size=[%d], spots=[%s]" % (middle_team_size, rank_requirement))
+        return rank_requirement
+
+    @classmethod
+    def old_grade_man(cls, tip, level, tip_goal):
         # 前一个数组长度必须比后一个大一, 比如前一个为9, 后面一个必须为8
         # [90,  80,  70,  60,  50,  40,  30,  20,  10]
         #   [140, 160, 180, 200, 220, 240, 260, 280]
@@ -73,7 +81,31 @@ class PayrollGradeLogic(object):
         return grade
 
     @classmethod
-    def get_grades(cls, statistic_date, deliveryman_id=None):
+    def grade_man(cls, tip, rank, tip_goal, rank_requirement):
+        # 前一个数组长度必须比后一个大一, 比如前一个为9, 后面一个必须为8
+        # [90,  80,  70,  60,  50,  40,  30,  20,  10]
+        #   [140, 160, 180, 200, 220, 240, 260, 280]
+        top_three_grades = [-1, 30, 20, 10]  # -1 as a placeholder
+        top_three_tip_goal = tip_goal[-3:]
+        for lower in xrange(3):
+            grades = top_three_grades[:-lower] if lower != 0 else top_three_grades
+            goal = top_three_tip_goal[:-lower] if lower != 0 else top_three_tip_goal
+            expectation = grades[bisect(goal, tip)]
+            if 0 < rank <= rank_requirement[lower]:
+                print ("tip=[%.1f], grade=[%s], rank=[%s]. using grades=%s, goal=%s, required_rank=[%s]" % (
+                    tip, expectation, rank, grades, goal, rank_requirement[lower]))
+                return expectation
+            else:
+                continue
+        grades = [x for x in xrange(90, 39, -10)]
+        goal = tip_goal[:-3]
+        grade = grades[bisect(goal, tip)]
+        print ("tip=[%.1f], grade=[%s], rank=[%s]. using grades=%s, goal=%s, required_rank=[None]" % (
+            tip, grade, rank, grades, goal))
+        return grade
+
+    @classmethod
+    def old_get_grades(cls, statistic_date, deliveryman_id=None):
         man_grades = {}  # {<user_id>: <grade>} eg. {7740959: 20}
         # 取单个
         if deliveryman_id:
@@ -86,7 +118,7 @@ class PayrollGradeLogic(object):
             number_of_middle_teammates = 1
             # 拿日营收评级规则
             tip_goal = cls.get_org_grading_guide(statistic_date, middle_team_org_num)[middle_team_org_num]
-            spots = cls.get_grade_spots_per_middle_team(number_of_middle_teammates)
+            spots = cls.old_get_grade_spots_per_middle_team(number_of_middle_teammates)
             # 拿中队日营收并从高到低排序
             daily_tips = DailyRankV3.find_by('user_id, tip',
                                              'where statistic_date=? and org_num regexp ?',
@@ -109,7 +141,7 @@ class PayrollGradeLogic(object):
                 grade = cls.grade_man(man.tip, level, tip_goal)
                 # 判断是否占了现有的最高的坑, 更新spots数组; (lower+1)*10只可能是10,20,30,40(要排除40的情况)
                 if lower < 3 and (
-                    lower + 1) * 10 == grade and nxt.tip != man.tip:  # 评级刚好在现有最高的坑上, 不是同一个人(第一个人的情况除外), 且不是并列.
+                            lower + 1) * 10 == grade and nxt.tip != man.tip:  # 评级刚好在现有最高的坑上, 不是同一个人(第一个人的情况除外), 且不是并列.
                     spots[lower] -= 1
                 print "adding man=[%s]" % man.user_id
                 man_grades[man.user_id] = grade
@@ -131,6 +163,15 @@ class PayrollGradeLogic(object):
             pass
         return man_grades
 
+    @classmethod
+    def get_grades(cls, statistic_date, deliveryman_id=None):
+        man_grades = {}  # {<user_id>: <grade>} eg. {7740959: 20}
+        # 取单个
+        if deliveryman_id:
+            pass
+        else:
+            pass
+
     """<<<End class util functions"""
 
     """>>>Begin class API functions"""
@@ -138,8 +179,25 @@ class PayrollGradeLogic(object):
 
 
 if __name__ == '__main__':
+    # === 测试拿不同中队出勤人数对应的评级规则(有排名限制)
     for t_mid_team_size in [-1, 0, 1, 5, 6, 11, 15, 16, 21, 1000]:
-        PayrollGradeLogic.get_grade_spots_per_middle_team(t_mid_team_size)
+        PayrollGradeLogic.get_grade_rank_requirement_per_middle_team(t_mid_team_size)
 
-    for t_tip in [0, 10.3, 90, 98.3, 100.3, 200.2, 210.2, 220.2, 240.2, 260, 260, 260, 260.2, 260.2, 280.2]:
-        PayrollGradeLogic.get_grades('2015-8-2', deliveryman_id=7751524)
+    # === 测试不同评级规则下的评级(有排名限制)
+    t_tips = [0, 10.3, 90, 98.3, 100.3, 200.2, 210.2, 220.2, 240.2, 260, 260, 260, 260.2, 260.2, 280.2]
+    t_tips = sorted(t_tips, reverse=True)
+    tr = []
+    for idx, t_tip in enumerate(t_tips):
+        prev_rank = tr[idx - 1][0] if idx != 0 else None
+        prev_tip = tr[idx - 1][1] if idx != 0 else None
+        # this = t_tip
+        t_rank = idx + 1 if t_tip != prev_tip else prev_rank  # 如果和前面的人tip不同,就取idx+1; 否则就抄前面的人的rank
+        tr.append((t_rank, t_tip))
+
+    # === 测试[[0, 0, 0], [0, 0, 1], [0, 1, 2], [1, 2, 3], [1, 2, 4], [1, 3, 5]]
+    for rule in [[0, 0, 0], [0, 0, 1], [0, 1, 2], [1, 2, 3], [1, 2, 4], [1, 3, 5]]:
+        print("rule=%s" % rule)
+        for t_rank, t_tip in tr:
+            PayrollGradeLogic.grade_man(t_tip, t_rank, [140, 160, 180, 200, 220, 240, 260, 280], rule)
+
+    # PayrollGradeLogic.old_get_grades('2015-8-2', deliveryman_id=7751524)
