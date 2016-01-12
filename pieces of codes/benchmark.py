@@ -11,14 +11,14 @@ class ParticleSimulator:
 
     def evolve(self, dt):
         time_step = 0.00001
-        n_steps = int(dt/time_step)
+        n_steps = int(dt / time_step)
 
         for i in range(n_steps):
             for p in self.particles:
                 # 1. calculate the direction
-                norm = (p.x**2+p.y**2)**0.5
-                v_x = (-p.y)/norm
-                v_y = p.x/norm
+                norm = (p.x ** 2 + p.y ** 2) ** 0.5
+                v_x = (-p.y) / norm
+                v_y = p.x / norm
                 # 2. calculate the displacement
                 d_x = time_step * p.ang_speed * v_x
                 d_y = time_step * p.ang_speed * v_y
@@ -30,19 +30,21 @@ class ParticleSimulator:
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
+
 def visualize(simulator):
     xs = [p.x for p in simulator.particles]
     ys = [p.y for p in simulator.particles]
-    
+
     fig = plt.figure()
     ax = plt.subplot(111, aspect='equal')
     line, = ax.plot(xs, ys, 'ro')
-# Axis limits
+    # Axis limits
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
-# It will be run when the animation starts
+
+    # It will be run when the animation starts
     def init():
-        line.set_data([],[])
+        line.set_data([], [])
         return line,
 
     def animate(i):
@@ -58,8 +60,8 @@ def visualize(simulator):
 
 def test_visualize():
     particles = [Particle(0.1, 0.5, +1),
-            Particle(0.0, -0.5, -1),
-            Particle(-0.1, -0.4, +3)]
+                 Particle(0.0, -0.5, -1),
+                 Particle(-0.1, -0.4, +3)]
     simulator = ParticleSimulator(particles)
     visualize(simulator)
     print('hallo alice')
@@ -67,11 +69,20 @@ def test_visualize():
 
 from random import uniform
 
+
 def benchmark():
-    particles = [Particle(uniform(-1.0, +1.0),uniform(-1.0, +1.0),uniform(-1.0,+1.0)) for i in range(1000)]
+    particles = [Particle(uniform(-1.0, +1.0), uniform(-1.0, +1.0), uniform(-1.0, +1.0)) for i in range(1000)]
     simulator = ParticleSimulator(particles)
     simulator.evolve(0.1)
 
+
+data = []
+with open('ec_loc.csv', 'r') as f:
+    a = f.readlines()
+    for l in a:
+        two = l.split(',')
+        two = [float(two[0]), float(two[1])]
+        data.append(two)
 
 if __name__ == '__main__':
     benchmark()

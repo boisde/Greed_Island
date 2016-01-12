@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>加载海量点</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        html,body{
+        margin:0;
+        width:100%;
+        height:100%;
+        background:#ffffff;
+        }
+        #map{
+        width:100%;
+        height:100%;
+        }
+        #panel1{
+        position: absolute;
+        top:30px;
+        left:10px;
+        z-index: 999;
+        color: #000;
+        }
+        #panel2{
+        position: absolute;
+        top:50px;
+        left:10px;
+        z-index: 999;
+        color: #000;
+        }
+        #login{
+        position:absolute;
+        width:300px;
+        height:40px;
+        left:50%;
+        top:50%;
+        margin:-40px 0 0 -150px;
+        }
+        #login input[type=password]{
+        width:200px;
+        height:30px;
+        padding:3px;
+        line-height:30px;
+        border:1px solid #000;
+        }
+        #login input[type=submit]{
+        width:80px;
+        height:38px;
+        display:inline-block;
+        line-height:38px;
+        }
+    </style>
+    <script type="text/javascript" src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=h8FNBx1joRo7ygyAagUcOYwN"></script>
+    <!--<script type="text/javascript" src="http://api.map.baidu.com/library/TrafficControl/1.4/src/TrafficControl.js"></script>-->
+    <script type="text/javascript" src="http://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"></script>
+    <!--<script type="text/javascript" src="http://api.map.baidu.com/library/DistanceTool/1.2/src/DistanceTool_min.js"></script>-->
+    <!-- // <script type="text/javascript" src="mc.js"></script> -->
+
+    <script type="text/javascript" src="http://api.map.baidu.com/library/MarkerClusterer/1.2/src/MarkerClusterer_min.js"></script>
+
+
+    <!--<script type="text/javascript" src="phh001.js"></script>-->
+</head>
+<body>
+<div id="panel1"></div>
+<div id="panel2"></div>
+<div id="map"></div>
+<script type="text/javascript">
+    network = [[120.111521,30.287735]];
+
+    var map = new BMap.Map("map", {retina:true});                            // 创建Map实例
+    map.centerAndZoom(new BMap.Point(120.16428,30.264589), 12); // 初始化地图,设置中心点坐标和地图级别
+    map.enableScrollWheelZoom();                        //启用滚轮放大缩小
+
+
+
+    polygons = []; // 多边形们
+    polygon_ids = []; // 多边形们的ID列表
+    $.get("http://new.api.gomrwind.com:5556/schedule/fe/network/fence", function(data)
+    {
+        data = JSON.parse(data);
+        content = data["content"];
+        content.forEach(function(itemFence){
+        points = itemFence["points"][0];
+        polygon_ids.push(itemFence["id"]);
+
+        bpoints = [];
+        points.forEach(function(itemPoint){
+            bpoints.push(new BMap.Point(itemPoint[0], itemPoint[1]));
+        });
+
+        var polygon = new BMap.Polygon(bpoints, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.4});
+        map.addOverlay(polygon);
+        //polygon.enableEditing();
+        polygons.push(polygon);
+        //   polygon.addEventListener("click", function(){
+        //   alert("!");
+        //});
+        });
+
+    });
+
+
+    if (document.createElement('canvas').getContext) {  // 判断当前浏览器是否支持绘制海量点
+        // 每天实时的没落到区域里面
+        $.get("http://123.57.40.134:5555/schedule/logic/wholesale_ec/phh/export", function(data){
+            var addrs = data.content;
+
+            var points = [];   // 添加海量点数据
+            // var markers = [];  // 添加点聚合
+            var extra = new Map();
+
+            //塞数据
+            for (var i = 0; i < addrs.length; i++) {
+                point = addrs[i].pt;
+                pt = new BMap.Point(point[0], point[1]);
+
+                points.push(pt);
+                extra.set(pt, i);
+
+                // markers.push(new BMap.Marker(pt));
+            }
+            panel1.textContent = "未匹配到区域的订单地址数量:"+points.length;
+            for (var i=0; i<addrs.length; i++){
+                console.log(addrs[i].district + " " + addrs[i].addr)
+            }
+
+
+            var options = {
+                size: BMAP_POINT_SIZE_NORMAL,
+                shape: BMAP_POINT_SHAPE_CIRCLE,
+                color: '#ee0000'
+            }
+            var pointCollection = new BMap.PointCollection(points, options);  // 初始化PointCollection
+            pointCollection.addEventListener('click', function (e) {
+                pt = e.point;
+                //console.log(extra.get(pt));
+                m = addrs[extra.get(pt)];
+                console.log(m);
+                alert('单击点的坐标为：' + e.point.lng + ',' + e.point.lat + ',' + m.addr + ',' + m.node_name +',' + m.tn);  // 监听点击事件
+            });
+            map.addOverlay(pointCollection);  // 添加Overlay
+        });
+        // 落入围栏区域的点
+        var markers = [];  // 添加点聚合
+        $.get("http://123.57.40.134:5555/schedule/logic/wholesale_ec/phh/export?notin=1", function(data){
+            var addrs = data.content;
+
+            var points = [];   // 添加海量点数据
+            var extra = new Map();
+
+            //塞数据
+            for (var i = 0; i < addrs.length; i++) {
+                point = addrs[i].pt;
+                pt = new BMap.Point(point[0], point[1]);
+
+                points.push(pt);
+                extra.set(pt, i);
+
+                markers.push(new BMap.Marker(pt));
+            }
+            panel2.textContent = "匹配到区域的订单地址数量:"+points.length;
+
+            var options = {
+                size: 2,
+                shape: BMAP_POINT_SHAPE_CIRCLE,
+                color: '#00aa22'
+            }
+            var pointCollection = new BMap.PointCollection(points, options);  // 初始化PointCollection
+            pointCollection.addEventListener('click', function (e) {
+                pt = e.point;
+                m = addrs[extra.get(pt)];
+                console.log(m);
+                alert('单击点的坐标为：' + e.point.lng + ',' + e.point.lat + ',' + m.addr + ',' + m.node_name +',' + m.tn);  // 监听点击事件
+            });
+            map.addOverlay(pointCollection);  // 添加Overlay
+
+
+            // 最简单的用法，生成一个marker数组，然后调用markerClusterer类即可。
+            // var markerClusterer = new BMapLib.MarkerClusterer(map, {markers:markers});
+        });
+    } else {
+        alert('请在chrome、safari、IE8+以上浏览器查看本示例');
+    }
+
+
+
+    // 点击显示地址
+   // var geoc = new BMap.Geocoder();
+	// map.addEventListener("click", function(e){
+		// var pt = e.point;
+		// geoc.getLocation(pt, function(rs){
+			// var addComp = rs.addressComponents;
+			// alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+		// });
+	// });
+
+
+
+</script>
+</body>
+</html>
+

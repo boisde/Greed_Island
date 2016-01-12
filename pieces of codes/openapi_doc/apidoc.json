@@ -1,0 +1,18 @@
+{
+	"name": "MrWind OpenAPI",
+	"version": "0.0.1",
+	"description": "风先生OpenAPI文档",
+	"title": "MrWind OpenAPI 文档",
+	"order": [
+        "Auth",
+        "PickUp",
+        "BulkSend",
+		"auth_first",
+		"api_create_pick_up_order",
+		"api_pick_up_order_callback",
+		"api_create_order",
+		"api_get_order_list",
+        "api_get_order_details",
+        "api_order_callback"
+	]
+}

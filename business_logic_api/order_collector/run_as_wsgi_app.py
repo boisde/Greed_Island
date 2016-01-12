@@ -26,6 +26,5 @@ WSGI_APP.add_module(rest_api)
 if __name__ == '__main__':
     WSGI_APP.run(5011, host='0.0.0.0')
 else:
-    # init log does not work here.
     print "\n@@@ uWSGI @@@\n"
     application = WSGI_APP.get_wsgi_application()
