@@ -9,7 +9,7 @@ def auth():
             {
                 "Authorization": "token 5b42e18555c11dbf2c31403ea6b706a6"
             }
-        @apiHeader {string} Authorization 验证身份，格式为"token <token>"，注意"token"后面需要一个空格, 请联系商务取得测试token.
+        @apiHeader {string} Authorization 验证身份，格式为"token <token>"，注意"token"后面需要一个空格, 请联系我们取得测试token.
     """
     pass
 
@@ -19,7 +19,7 @@ def auth_first():
         @api {method} 在api对接阶段,请联系我们获得测试token.之后在所有接口请求头中传入token,示例如下: 取得测试/线上token
         @apiVersion 0.0.1
         @apiName auth_first
-        @apiDescription 在开始之前，您必须联系我们的商务取得风先生平台的服务访问token。该token将会被我们当做您的身份认证。
+        @apiDescription 在开始之前，您必须联系我们取得风先生平台的服务访问token。该token将会被我们当做您的身份认证。
         @apiGroup Auth
 
         @apiUse AuthHeader

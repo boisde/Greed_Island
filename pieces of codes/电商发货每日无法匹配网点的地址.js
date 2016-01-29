@@ -9,7 +9,7 @@ db.phh_record.aggregate(
 
     // Stage 2
     {
-      $match: { "create_time": { $gte: ISODate("2016-01-06T16:00:00") } }
+      $match: { "create_time": { $gte: ISODate("2016-01-06T16:00:00"), $lt: ISODate("2016-01-07T16:00:00") } }
     },
 
     // Stage 3

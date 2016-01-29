@@ -6,6 +6,8 @@ import traceback
 import time
 from requests.exceptions import Timeout
 from random import randint
+from core_gedis import Redis
+from ast import literal_eval
 
 URL = "http://api.map.baidu.com/place/v2/search"
 
@@ -46,6 +48,15 @@ def get_location_coordinates(location):
 
 
 def _get_coord(address):
+    # 优先从redis取
+    redis = Redis()
+    ret = redis.get(address)
+    if ret:
+        ret = literal_eval(ret)
+        # print ("[%s] [%s] [%s] [%s,%s]" % (address, ret[0], ret[1], ret[2], ret[3]))
+        return ret[0], ret[1], ret[2], ret[3]
+
+    # 没有,再从baidu取
     url = r"http://api.map.baidu.com/geocoder/v2/"
     params = {
         "ak": __get_ak(),
@@ -63,7 +74,10 @@ def _get_coord(address):
         longitude = location.get("lng")
         result = baidu_data.get("result")
         print ("[%s] [%s] [%s] [%s,%s] [%s]" % (address, result['precise'], result['confidence'], longitude,latitude, result['level'].encode('utf-8')))
-    return result['precise'], result['confidence'], longitude, latitude
+        redis.setex(address, [result['precise'], result['confidence'], longitude, latitude], 60*60*24)
+        return result['precise'], result['confidence'], longitude, latitude
+    else:
+        return None, None, longitude, latitude
 
 
 def reverse_location_parse(lat=0, lng=0):
