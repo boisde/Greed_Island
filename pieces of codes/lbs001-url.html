@@ -78,9 +78,9 @@
 
     polygons = []; // 多边形们
     polygon_ids = []; // 多边形们的ID列表
-    $.get("http://new.api.gomrwind.com:5556/schedule/fe/network/fence", function(data)
+    $.get("http://api.gomrwind.com:5000/schedule/fe/fence", function(data)
     {
-        data = JSON.parse(data);
+        // data = JSON.parse(data);
         content = data["content"];
         content.forEach(function(itemFence){
         points = itemFence["points"][0];
