@@ -1,0 +1,45 @@
+免责申明： 除了算法类题目以外，其它都是半开放式的问题。问题和解答大都本人自己整理得出，如有误可以探讨。
+
+=== 语言
+1. python2.7中的字符串和编码，unicode和utf-8有什么差别，要如何互相转化。
+(u".encode('utf-8'), '中文'.decode()）
+
+2. list, dict, set的比较：
+(dict: 查找和插入的速度极快，不会随着key的增加而增加；需要占用大量的内存，内存浪费多；key必须是不可变对象-因为要hash出确定的值。
+而list相反：查找和插入的时间随着元素的增加而增加；占用空间小，浪费内存很少。
+set: 和dict类似，也是一组key的集合，但不存储value。由于key不能重复，所以，在set中没有重复的key。)
+
+3. 不要在python中随意用递归，为什么？ 因为python标准解析器没有针对尾递归的优化。
+
+=== 算法
+1.a function that takes in a string of words separated by spaces and which prints the first duplicate word.
+两种实现：1) 如果用python,先分词,再顺序遍历分词结果,将非重复存储起来,直到比对到第一个重复。==>能正确实现即得分。
+2) 第一种实现在string很长,比如是一整个网页文本/书的情况下,性能和使用空间都会很糟糕,如果该应聘者考虑到这点并进行询问,则加分; 如果采用边遍历边分词比对且实现正确，则加分。
+
+2.a function that took in two sorted arrays of integers with no duplicate values within a single array and which returned an array of the duplicates between the two arrays.
+几种实现：1) 对任一数组遍历，并依次比对另一个数组查重复。M*N
+2) 对任一数组遍历，并依次在另一个数组中二分查找。 MlogN
+3) 先merge sort, 然后遍历一次得出结果。 M+N
+越往下的正确实现给分越高，如果依据M,N量级给出分析并给出多种解决方案，则加分。
+
+
+=== db
+1. 传统关系型数据库和NoSQL的差别(实现上，如果号称自己能完全弄懂传统型数据库的减分，应用上，NoSQL基于键值对的实现对于分布式的好处; transaction）。
+2. transaction在应用上的主要目的(保证数据一致性)。transaction的性质-ACID。知道为了保证transaction的性质有数据库各个层次的锁。row lock, table lock什么的。
+(对SQL熟悉可以加分，但是如果连transaction都不知道还是减分。)
+
+
+=== 操作系统
+1.简单知道线程模型和进程的区别（共享heap,当然stack不可能是共享的）
+2.知道什么是mutex。知道race condition。知道怎么用mutex(lock/trylock/unlock)实现read/write lock。知道mutex乱加后果是很严重的。（deadlock。Thread1: lock(A), lock(B) Thread2: lock(B), lock(A)）
+3.知道fork()。知道Linux上fork的实现很快。NT上CreateProcess很慢。
+4.有个东西叫做I/O cache，读写磁盘的时候会用内存存住一些来加速访问。I/O cache的内存有限，所以要page replacement algorithm。虚拟内存中哪页内存到disk也是这个问题。
+常见的page replacement algorithm有LRU等（LIRS,ARC也知道的话可以加分-具体不用了解）。
+
+
+=== 网络
+1.需要了解HTTP协议(request/response的客户端请求、服务器被动回应的模型)。知道什么是GET/POST，知道有cookies这个东西。
+2.简单知道TCP的怎么保证数据完整性的。知道TCP怎么握手的（SYN/SYN_ACK/ACK)，知道怎么断开的(FIN/FIN_ACK)，知道主动断开会出现TCP_TIME_WAIT这个状态。
+
+
+=== 系统架构
