@@ -29,7 +29,7 @@ AK_BUFFER = [
 
 
 def __get_ak():
-    return AK_BUFFER[randint(0, len(AK_BUFFER)-1)]
+    return AK_BUFFER[randint(0, len(AK_BUFFER) - 1)]
 
 
 def get_location_coordinates(location):
@@ -73,8 +73,9 @@ def _get_coord(address):
         latitude = location.get("lat")
         longitude = location.get("lng")
         result = baidu_data.get("result")
-        print ("[%s] [%s] [%s] [%s,%s] [%s]" % (address, result['precise'], result['confidence'], longitude,latitude, result['level'].encode('utf-8')))
-        redis.setex(address, [result['precise'], result['confidence'], longitude, latitude], 60*60*24)
+        print ("[%s] [%s] [%s] [%s,%s] [%s]" % (
+        address, result['precise'], result['confidence'], longitude, latitude, result['level'].encode('utf-8')))
+        redis.setex(address, [result['precise'], result['confidence'], longitude, latitude], 60 * 60 * 24)
         return result['precise'], result['confidence'], longitude, latitude
     else:
         return None, None, longitude, latitude
@@ -117,7 +118,8 @@ def reverse_location_parse(lat=0, lng=0):
     return location
 
 
-def get_distance(from_latitude, from_longitude, to_latitude, to_longitude, region, origin_region, destination_region, mode='walking'):
+def get_distance(from_latitude, from_longitude, to_latitude, to_longitude, region, origin_region, destination_region,
+                 mode='walking'):
     """
     调用百度API获取不同模式下的距离
     百度API文档地址: http://developer.baidu.com/map/index.php?title=webapi/direction-api
@@ -195,3 +197,12 @@ def get_address(longitude, latitude):
         return None
     except Exception:
         return None
+
+
+if __name__ == '__main__':
+    lat, lng = get_location_coordinates(dict(city="杭州市", district="", street="万塘路258号杭州师范大学"))
+    print ("%s, %s" % (lng, lat))
+    lat, lng = get_location_coordinates(dict(city="杭州市", district="西湖区", street="万塘路258号杭州师范大学"))
+    print ("%s, %s" % (lng, lat))
+    lat, lng = get_location_coordinates(dict(city="杭州市", district="西湖区", street="万塘路258号"))
+    print ("%s, %s" % (lng, lat))

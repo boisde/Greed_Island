@@ -1,4 +1,3 @@
-
 # NodeSet get_successor(Node node);
 # Node A, Node B;
 
@@ -47,6 +46,7 @@ class StableSet(object):
 
 def fact(n):
     return fact_iter(n, 1)
+
 
 def fact_iter(num, product):
     if num == 1:

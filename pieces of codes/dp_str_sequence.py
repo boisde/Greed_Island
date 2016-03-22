@@ -42,7 +42,7 @@ class Solution:
         for i in range(1, N):
             dp[i] = 1
             for j in range(i):
-                if dp[j]+1 > dp[i] and self.seq[j] < self.seq[i]:
+                if dp[j] + 1 > dp[i] and self.seq[j] < self.seq[i]:
                     dp[i] = dp[j] + 1
             if dp[i] > maxlen:
                 maxlen = dp[i]
@@ -63,24 +63,24 @@ class Solution:
         return self.memo_dp_up[i]
 
     def zigzag(self, n):
-        up, down = {0:1}, {0:1}
+        up, down = {0: 1}, {0: 1}
         best_len = 0
         for i in range(n):
             up[i], down[i] = 1, 1
             print "i=[%d], up=%s, down=%s" % (i, up, down)
             for j in range(i):
-                up[i] = max(down[j]+1,up[i]) if self.seq[i]>self.seq[j] else 1
-                down[i] = max(up[j]+1,down[i]) if self.seq[i]<self.seq[j] else 1
+                up[i] = max(down[j] + 1, up[i]) if self.seq[i] > self.seq[j] else 1
+                down[i] = max(up[j] + 1, down[i]) if self.seq[i] < self.seq[j] else 1
             best_len = max(best_len, max(up[i], down[i]))
         return best_len
 
 
-
 if __name__ == "__main__":
     sol1 = Solution([6, 7, 8, 1, 2, 3])
-    print "up_exp%s=[%d], func calls=[%d]" % (sol1.seq,sol1.up_exp(len(sol1.seq)-1), sol1.calls_exp)
+    print "up_exp%s=[%d], func calls=[%d]" % (sol1.seq, sol1.up_exp(len(sol1.seq) - 1), sol1.calls_exp)
 
-    print "up_dp%s=[%d], func calls=[%d], memo=%s" % (sol1.seq, sol1.up_dp(len(sol1.seq)-1), sol1.calls_dp, sol1.memo_dp_up)
+    print "up_dp%s=[%d], func calls=[%d], memo=%s" % (
+    sol1.seq, sol1.up_dp(len(sol1.seq) - 1), sol1.calls_dp, sol1.memo_dp_up)
 
     # sol2 = Solution([1, 7, 4, 9, 2, 5])
     sol2 = Solution([1, 2, 12, 10, 11])

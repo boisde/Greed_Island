@@ -1,4 +1,4 @@
-#coding=utf-8
+# coding=utf-8
 
 if __name__ == "__main__":
 
@@ -10,19 +10,15 @@ if __name__ == "__main__":
         ai, bi = map(int, raw_input().split())
         handles.append((ai, bi))
 
-    # for k in range(k_sets):
-    #     for i in range(n_times):
-    #         ai, bi = handles[i]
-    #         balls[ai-1], balls[bi-1] = balls[bi-1], balls[ai-1]
     if k_sets % 15 != 0:
         for i in range(n_times):
             ai, bi = handles[i]
-            balls[ai-1], balls[bi-1] = balls[bi-1], balls[ai-1]
+            balls[ai - 1], balls[bi - 1] = balls[bi - 1], balls[ai - 1]
         bd = {}
         for now_at_index, ball in enumerate(balls):
             bd[ball] = now_at_index
         print bd
-        for _ in range(k_sets%15-1):
+        for _ in range(k_sets % 15 - 1):
             tmp = {}
             for i in range(8):
                 if bd[i] not in tmp:
@@ -32,5 +28,5 @@ if __name__ == "__main__":
                 else:
                     balls[bd[i]] = balls[i]
 
-    balls = [str(i+1) for i in balls]
+    balls = [str(i + 1) for i in balls]
     print " ".join(balls)
