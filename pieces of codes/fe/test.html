@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>die affen</title>
+    <script type="text/javascript" src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+</head>
+<body>
+<div id="panel1">abc</div>
+
+<script type="text/javascript">
+
+    var SendInfo = {"count": 1};
+    $.ajax({
+        type: 'post',
+        url: 'http://dev.api.gomrwind.com:5000/express/h5/multi',
+        data: JSON.stringify(SendInfo),
+        contentType: "application/json; charset=utf-8",
+        beforeSend: function (xhr) {
+                /* Authorization header */
+                xhr.setRequestHeader("Authorization", "token f3a2d1b46be1c2652c79182bb109b121");
+            },
+        traditional: true,
+        success: function (data) {
+            alert(data[0].number);
+        }
+    });
+
+
+</script>
+</body>
+</html>
+
