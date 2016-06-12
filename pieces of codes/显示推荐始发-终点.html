@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>找可行的线路</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        html,body{
+        margin:0;
+        width:100%;
+        height:100%;
+        background:#ffffff;
+        }
+        #map{
+        width:100%;
+        height:100%;
+        }
+        #panel1{
+            position: absolute;
+            top: 30px;
+            left: 10px;
+            z-index: 999;
+            color: #000;
+        }
+        #panel2{
+        width: 35%;
+        position: absolute;
+        bottom:40px;
+        left:10px;
+        z-index: 999;
+        color: #000;
+        background: rgba(255,255,255,0.8);
+        }
+        }
+    </style>
+    <script type="text/javascript" src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=h8FNBx1joRo7ygyAagUcOYwN"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"></script>
+    <!--<script type="text/javascript" src='orbit.js'></script>-->
+</head>
+<body>
+<div id="panel1"><button>点击选择起始点</button></div>
+<div id="panel2"></div>
+<div id="map"></div>
+<script type="text/javascript">
+    network = [[120.111521,30.287735]];
+
+    var map = new BMap.Map("map", {retina:true});               // 创建Map实例
+    map.centerAndZoom(new BMap.Point(120.16428,30.264589), 12); // 初始化地图,设置中心点坐标和地图级别
+    map.enableScrollWheelZoom();                                //启用滚轮放大缩小
+
+    // == 单击获取点击的经纬度
+    function set_node(e){
+        // == 设置为寄方地址/收方地址?
+        var pt = e.point;
+        geoc.getLocation(pt, function(rs){
+            var addComp = rs.addressComponents;
+            console.log(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+            map.removeEventListener("click", set_node);
+        });       
+    }
+
+    var geoc = new BMap.Geocoder();
+    $('#panel1').click(function(e){
+        //单击获取点击的经纬度
+        map.addEventListener("click", set_node);
+
+    });
+
+
+    polygons = [];    // 多边形们
+    polygon_ids = []; // 多边形们的ID列表
+    $.get("http://api.gomrwind.com:5000/schedule/fe/fence", function(data)
+    {
+        // data = JSON.parse(data);
+        content = data["content"];
+        content.forEach(function(itemFence){
+        points = itemFence["points"][0];
+        polygon_ids.push(itemFence["id"]);
+
+        bpoints = [];
+        points.forEach(function(itemPoint){
+            bpoints.push(new BMap.Point(itemPoint[0], itemPoint[1]));
+        });
+
+        var polygon = new BMap.Polygon(bpoints, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.4});
+        map.addOverlay(polygon);
+        //polygon.enableEditing();
+        polygons.push(polygon);
+        //   polygon.addEventListener("click", function(){
+        //   alert("!");
+        //});
+        });
+
+
+        var node = {
+              "node_n": {
+                "lat": 30.3172775981,
+                "lng": 120.1507194419,
+                "addr": "紫荆家园28-1-102"
+              },
+              "node_0": {
+                "lat": 30.2612060000,
+                "lng": 120.2042280000,
+                "addr": "采荷公园"
+              }
+            }
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:9099/express/can_be_served",
+            contentType: 'application/json',
+            data: JSON.stringify(node),
+            success: function(data) {
+                // == 寄方->收方
+                var point = new BMap.Point(node.node_0.lng, node.node_0.lat);  
+                var marker = new BMap.Marker(point, {
+                      icon: new BMap.Symbol(BMap_Symbol_SHAPE_POINT, {
+                        scale: 1,//图标缩放大小
+                        fillColor: "orange",//填充颜色
+                        fillOpacity: 0.8//填充透明度
+                      })
+                  });        // 创建标注
+                var label = new BMap.Label("寄方: "+node.node_0.addr,{offset:new BMap.Size(20,-10)}); 
+                marker.setLabel(label);  
+                map.addOverlay(marker);                     // 将标注添加到地图中
+
+                var point = new BMap.Point(node.node_n.lng, node.node_n.lat);
+                var vectorMarker = new BMap.Marker(point, {
+                    icon: new BMap.Symbol(BMap_Symbol_SHAPE_POINT, {
+                    scale: 1,//图标缩放大小
+                    fillColor: "green",//填充颜色
+                    fillOpacity: 0.8//填充透明度
+                    })
+                });
+                var label = new BMap.Label("收方: "+node.node_n.addr,{offset:new BMap.Size(20,-10)})
+                vectorMarker.setLabel(label);
+                map.addOverlay(vectorMarker);
+
+                var polyline = new BMap.Polyline([    
+                   new BMap.Point(node.node_0.lng, node.node_0.lat),    
+                   new BMap.Point(node.node_n.lng, node.node_n.lat)    
+                 ],    
+                 {strokeColor:"blue", strokeWeight:6, strokeOpacity:0.5}    
+                );    
+                map.addOverlay(polyline);
+
+                // == 添加站点数据orbit
+                var points = []; 
+                var extra = new Map();
+                var orbit = data.orbit;
+                for (var i = 0; i < orbit.length; i++) {
+                    point = orbit[i].coordinates;
+                    pt = new BMap.Point(point[1], point[0]);
+
+                    points.push(pt);
+                    extra.set(pt, i);
+                }
+                $('#panel2').append("站点总数量:"+points.length+"<br>");
+
+                // for (var i=0; i<orbit.length; i++){
+                //     console.log(orbit[i].name + " " + orbit[i].t)
+                // }
+
+                var options = {
+                    size: BMAP_POINT_SIZE_NORMAL,
+                    shape: BMAP_POINT_SHAPE_CIRCLE,
+                    color: '#049'
+                }
+                var pointCollection = new BMap.PointCollection(points, options);  // 初始化PointCollection
+                pointCollection.addEventListener('click', function (e) {
+                    pt = e.point;
+                    //console.log(extra.get(pt));
+                    m = orbit[extra.get(pt)];
+                    console.log(m);
+                    alert('单击点的坐标为：' + e.point.lng + ',' + e.point.lat + ',' + m.name + ',' + m.t +',' + m.id);  // 监听点击事件
+                });
+                map.addOverlay(pointCollection);  // 添加Overlay
+
+
+                // == 添加附近站点
+                var s0 = data.s0;
+                var sn = data.sn;
+                for (var i = 0; i < s0.length; i++){
+                    var polyline = new BMap.Polyline([    
+                        new BMap.Point(s0[i].n0[1], s0[i].n0[0]),    
+                        new BMap.Point(s0[i].point.coordinates[1], s0[i].point.coordinates[0])    
+                     ],    
+                     {strokeColor:"orange", strokeWeight:6, strokeOpacity:0.5});
+                    map.addOverlay(polyline);
+                }
+                $('#panel2').append('找到寄方附近站点 '+s0.length+' 个<br>');
+                for (var i = 0; i < sn.length; i++){
+                    var polyline = new BMap.Polyline([
+                            new BMap.Point(sn[i].nn[1], sn[i].nn[0]),
+                            new BMap.Point(sn[i].point.coordinates[1], sn[i].point.coordinates[0])
+                        ], 
+                        {strokeColor:"green", strokeWeight:6, strokeOpacity:0.5});
+                    map.addOverlay(polyline);
+                }
+                $('#panel2').append('找到收方附近站点 ' + sn.length + ' 个<br><br>')
+
+                // == 添加提示信息
+                var prompts = data.prompts;
+                for (var i = 0; i < prompts.length; i++){
+                    $('#panel2').append(prompts[i]+'<br>')
+                }
+            }
+        });
+
+
+
+
+    });
+
+
+
+
+</script>
+</body>
+</html>
+

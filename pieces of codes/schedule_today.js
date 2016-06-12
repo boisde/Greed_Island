@@ -1,4 +1,6 @@
-{
+<script type="text/javascript">
+
+var schedule_today = {
   "56e291d5eed09326d9d23a08": {
     "run": [
       {
@@ -2321,3 +2323,4 @@
     ]
   }
 }
+</script>
