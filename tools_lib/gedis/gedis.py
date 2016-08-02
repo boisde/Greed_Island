@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import unicode_literals
+import arrow
 import redis
 from redis import ConnectionPool, ConnectionError, BusyLoadingError, AuthenticationError
 from tools_lib.host_info import CURRENT_NODE, DEV_OUTER_IP, DEV_NODE, PROD_API_NODE, IP_REDIS, LOCALHOST_NODE
@@ -29,7 +31,7 @@ class Redis(redis.Redis):
     处理Redis执行命令时可能发生的异常.
     所有view中都应该使用这里的lib.gedis.Redis来替代redis-py的redis.Redis实例化Redis对象
     所有redis命令执行后都应判断返回值，若返回REDIS_CONNECTION_ERROR，则应将写操作retry；
-    若返回REDIS_ERROR，则需要从mysql读写数据；
+    若返回REDIS_ERROR，则需要从db读写数据；
     若返回None则需要根据实际情况判断
     用法：
     from lib.gedis import Redis
@@ -37,7 +39,7 @@ class Redis(redis.Redis):
         r = Redis()
         result = r.get('a')
     except:
-        ...msql...
+        ...db...
     else:
         return result
     """
@@ -56,16 +58,12 @@ class Redis(redis.Redis):
             print('Redis Error happened when executing command %s %s: %s' % (args, kwargs, ex))
 
     def expire_at_today(self, key, hour=0):
-        from tools_lib.common_util.archived.gtz import TimeZone
-        tomorrow = TimeZone.increment_days(TimeZone.local_now())
-        self.expireat(key, TimeZone.increment_hours(TimeZone.transfer_datetime_to_beginning(tomorrow), hour))
+        self.expireat(key, arrow.now().replace(days=-1, hour=hour, minute=0, second=0, microsecond=0).datetime)
 
     def expire_at_this_end_of_month(self, key):
         # 本月月底过期
-        from tools_lib.common_util.archived.gtz import TimeZone
-        local_now = TimeZone.local_now()
-        end_of_this_month = TimeZone.utc_to_local(TimeZone.month_range(local_now.year, local_now.month)[1])
-        self.expireat(key, end_of_this_month)
+        start_of_next_month = arrow.now().replace(months=+1, day=1, hour=0, minute=0, second=0, microsecond=0).datetime
+        self.expireat(key, start_of_next_month)
         self.delete()
 
     def get_parallel_rank(self, key, member, reverse=True):

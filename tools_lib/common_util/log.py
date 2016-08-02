@@ -36,8 +36,7 @@ def init_log(mod_dir):
         "api_gateway": "AG",
         "business_logic": "BL",
         "data_and_service": "DAS",
-        "schedule": "SC",
-    }[folders[-2]]
+    }.get(folders[-2], 'NA')
     mod_first_letter = folders[-1][0].upper()
     mod_rest_letters = folders[-1][1:].lower()
     if prefix == "AW":
