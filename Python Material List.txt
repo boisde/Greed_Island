@@ -1,6 +1,0 @@
-
-一星：www.jisuanke.com 与 www.codecademy.com
-二星：Numpy Beginner's Guide 2nd 与 Think Python
-三星：Python for Data Analysis 与 Flask Web Development
-四星：Machine Learning in Action
-五星：Learning Python ...(1500页的工具书，有代码有干货)
