@@ -2,7 +2,7 @@
 # coding:utf-8
 from __future__ import unicode_literals
 import tornado.websocket
-
+import json
 from models import channels, receivers
 
 # we gonna store clients in dictionary..
@@ -32,6 +32,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         }
         """
         # 1. 找到receivers, 记录message, sender, receivers
+        m_obj = json.loads(m_obj)
         ch_id = m_obj['channel']
         m_type = self.m_type
         rs = {}
@@ -42,10 +43,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # 2. 向receivers丢消息
         print("Client %s received a message : %s" % (self.client_id, m_obj))
+        print('Receivers: %s' % rs.keys())
         for r in rs:
-            r_socket = clients.get(r)
-            if r_socket:
-                self.write_message('Someone[%s] sent me: [%s]' % (r_socket, m_obj['text']))
+            r_obj = clients.get(r)
+            if r_obj:
+                r_socket = r_obj['object']
+                print('%s is receiving msg...' % r)
+                r_socket.write_message('Someone[%s] sent me: [%s]' % (r_socket, m_obj['text']))
 
     def on_close(self):
         print("WebSocket closed")
