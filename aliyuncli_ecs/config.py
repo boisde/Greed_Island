@@ -2,7 +2,7 @@
 # coding:utf-8
 from __future__ import unicode_literals
 
-ECS_URI = 'http://ecs.aliyuncs.com/?'
+ECS_URI = 'https://ecs.aliyuncs.com/?'
 
 ALIYUN_ACCESS_KEY_SECRET = 'x85FtYeQmOJr3QoB6Ss6TCvqn273zi'
 ALIYUN_ACCESS_KEY_ID = 'LTAIDYCTJM81cxtl'
@@ -31,6 +31,10 @@ params = {
     "RegionId": REGION,
 }
 
-disk_ids = {
-    'python-69': 'd-254h1jttk',
-}
+
+class Node(object):
+    PYTHON_API = 'python-69'
+
+    disk_ids = {
+        PYTHON_API: 'd-254h1jttk',
+    }

@@ -7,22 +7,20 @@ import traceback
 import config as ac
 
 
-def describe_instance_status():
+def get_ecs_api_url(action, **kwargs):
     """
 
     """
     try:
-        ac.params.update({
-            #  基本参数
-            'Timestamp': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            # 操作参数
-            "Action": 'DescribeInstanceStatus',
-            "RegionId": ac.REGION,
-        })
+        # 基本参数
+        ac.params['Timestamp'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        # 操作参数
+        ac.params['Action'] = action  # 如 'DescribeInstanceStatus'
+        ac.params.update(kwargs)
 
         params, raw = params_filter(ac.params)
         # 签名
-        params['Signature'] = sign(ac.ALIYUN_ACCESS_KEY_SECRET+'&', raw)
+        params['Signature'] = sign(ac.ALIYUN_ACCESS_KEY_SECRET + '&', raw)
 
         return ac.ECS_URI + urlencode(params)
     except Exception as e:
