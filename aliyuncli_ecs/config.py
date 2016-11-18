@@ -7,11 +7,14 @@ ECS_URI = 'https://ecs.aliyuncs.com/?'
 ALIYUN_ACCESS_KEY_SECRET = 'x85FtYeQmOJr3QoB6Ss6TCvqn273zi'
 ALIYUN_ACCESS_KEY_ID = 'LTAIDYCTJM81cxtl'
 REGION = 'cn-beijing'
+ZONE = 'cn-beijing-a'
 
 SIGN_TYPE = 'HMAC-SHA1'
 VERSION = '2014-05-26'
 FORMAT = 'json'
 SIGNATURE_VERSION = '1.0'
+
+DEFAULT_PASS = "6$lQJ52)EOVyw1m4CW"
 
 params = {
     ##################################################

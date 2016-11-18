@@ -59,7 +59,7 @@ def params_filter(params):
 
 def sign(key, raw):
     """
-    签名, 目前只支持md5签名
+    签名, 目前只支持HMAC-SHA1签名
     :param raw: 待签名的字符串
     :param key: 支付宝交易安全检验码
     :return: 签名后的字符串
@@ -67,7 +67,7 @@ def sign(key, raw):
     from hashlib import sha1
     import hmac
 
-    print("SIGN (%s).........." % raw)
+    # print("SIGN (%s).........." % raw)
     hashed = hmac.new(str(key), raw, sha1)
     # The signature
     return hashed.digest().encode("base64").rstrip('\n')
