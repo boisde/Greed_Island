@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 from __future__ import unicode_literals
+import copy
 import datetime
 from urllib import urlencode, quote
 import traceback
@@ -12,13 +13,14 @@ def get_ecs_api_url(action, **kwargs):
 
     """
     try:
+        params = copy.copy(ac.params)
         # 基本参数
-        ac.params['Timestamp'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        params['Timestamp'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
         # 操作参数
-        ac.params['Action'] = action  # 如 'DescribeInstanceStatus'
-        ac.params.update(kwargs)
+        params['Action'] = action  # 如 'DescribeInstanceStatus'
+        params.update(kwargs)
 
-        params, raw = params_filter(ac.params)
+        params, raw = params_filter(params)
         # 签名
         params['Signature'] = sign(ac.ALIYUN_ACCESS_KEY_SECRET + '&', raw)
 

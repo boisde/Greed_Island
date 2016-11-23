@@ -35,9 +35,11 @@ params = {
 }
 
 
-class Node(object):
-    PYTHON_API = 'python-69'
-
-    disk_ids = {
-        PYTHON_API: 'd-254h1jttk',
-    }
+disk_ids = {
+    'python-69': 'd-254h1jttk',
+    'mongodb-75': 'd-25ezqpnvy',
+    'mysql-134': 'd-25py0tvqp',
+    '196': 'd-25dcw4rs1',
+    '41': 'd-25d07yyz0',
+    '138': 'd-25uqkh0a4',
+}
