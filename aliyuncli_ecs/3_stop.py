@@ -26,7 +26,7 @@ def end(gen):
                 print('实例已停止, 等5s缓冲...')
                 time.sleep(5)
             else:
-                print('此实例已经不存在.    ')
+                print('此实例已经不存在.')
 
         print('开始删除实例, 镜像和快照...')
         af.Instance.delete(gen['instance_id'])
