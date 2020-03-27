@@ -1,0 +1,1 @@
+${ingest_proxy_private_ip} dns=${ingest_proxy_dns} instance_id=${ingest_proxy_instance_id} alloc_id=${ingest_proxy_eip_alloc_id}

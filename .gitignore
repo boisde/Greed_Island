@@ -59,3 +59,6 @@ docs/_build/
 .DS_STORE
 
 logs/
+
+
+.terraform/
