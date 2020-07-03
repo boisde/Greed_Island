@@ -7,7 +7,7 @@ from multiprocessing import set_start_method
 
 
 def f(x):
-    command = "ffmpeg -i /home/ubuntu/test-with-timer.flv -c:v copy -strict -2 -b:v 2M -maxrate 3M -c:a aac -f flv rtmp://ingest-b0.inner.dlivecdn.com/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d &" % x
+    command = "ffmpeg -i /home/ubuntu/test-with-timer.flv -c:v copy -strict -2 -maxrate 4M -c:a aac -f flv rtmp://ingest-b0.inner.dlivecdn.com/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d &" % x
     # command = "ffmpeg -i /Users/chenxinlu/Movies/test-with-timer.flv -c:v copy -strict -2 -b:v 3M -maxrate 4M -c:a aac -f flv rtmp://stream-default-v0609.prd.dlive.tv/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d" % x
     print(command)
     # proc = subprocess.run(shlex.split(command))
