@@ -5,24 +5,38 @@ import sys
 from multiprocessing import Process
 from multiprocessing import set_start_method
 
-
-def f(x):
-    command = "ffmpeg -i /home/ubuntu/test-with-timer.flv -c:v copy -strict -2 -maxrate 4M -c:a aac -f flv rtmp://ingest-b0.inner.dlivecdn.com/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d &" % x
-    # command = "ffmpeg -i /Users/chenxinlu/Movies/test-with-timer.flv -c:v copy -strict -2 -b:v 3M -maxrate 4M -c:a aac -f flv rtmp://stream-default-v0609.prd.dlive.tv/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d" % x
-    print(command)
-    # proc = subprocess.run(shlex.split(command))
-    # os.system(command)
-    subprocess.run(command, shell=True)
+# Usage: (1) ./gen-ffmpeg-sh.py 1 10 local foreground
+# (2) ./gen-ffmpeg-sh.py 1 100 remote daemon
 
 
 if __name__ == "__main__":
-    set_start_method("spawn")
-    buf = []
-    # print(sys.argv)
+    # 1. Global configurations of ingest server
+    conf = dict(
+        local={
+            "input_flv_file": "~/transcoder-testing/test-with-timer.flv",
+            "rtmp_server_domain": "127.0.0.1"
+        },
+        remote={
+            "input_flv_file": "test-with-timer.flv",
+            "rtmp_server_domain": "127.0.0.1"
+        }
+    )
+    which_env = str(sys.argv[3]) if len(sys.argv) >= 4 else 'remote'
+    input_flv_file = conf[which_env]['input_flv_file']
+    rtmp_server_domain = conf[which_env]['rtmp_server_domain']
+
+    # 2. take in args from command line
     start_id = int(sys.argv[1]) if len(sys.argv) >= 2 else 1
     end_id = int(sys.argv[2]) if len(sys.argv) >= 3 else 1
-    for  i in range(start_id,end_id+1):
-        line = "ffmpeg -re -fflags +genpts -stream_loop -1  -i test-with-timer.flv -c:v copy -strict -2 -b:v 2M -maxrate 4M -c:a aac -f flv rtmp://ingest-b0.inner.dlivecdn.com/live/dlivetestdlivetestdlivetestdlive_dlivetest-%d &\n" % i
+    daemon = '' if len(sys.argv) >= 5 and (str(sys.argv[4]) != 'daemon') else '&'
+
+    # 3. generate command line
+    buf = []
+    for i in range(start_id, end_id + 1):
+        line = "ffmpeg -stream_loop 2 -re -i {input_flv_file} " \
+               "-f flv -c:v copy -c:a aac -strict -2 -maxrate 4M " \
+               "rtmp://{rtmp_server_domain}/live/dlivetestdlivetestdlivetestdlive_dlivetest-{i} {daemon}\n".format(
+                input_flv_file=input_flv_file, rtmp_server_domain=rtmp_server_domain, i=i, daemon=daemon)
         buf.append(line)
 
     sh_file_name = "ffmpeg-%d-%d.sh" % (start_id, end_id)
@@ -35,7 +49,6 @@ if __name__ == "__main__":
         print(l[:-1])
 
     os.system("chmod +x %s" % sh_file_name)
-
 
     # pool = Pool(processes=16)
     # pool.map(f, list(range(start_id,end_id+1)))
