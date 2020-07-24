@@ -5,8 +5,8 @@ import sys
 from multiprocessing import Process
 from multiprocessing import set_start_method
 
-# Usage: (1) ./gen-ffmpeg-sh.py 1 10 local foreground
-# (2) ./gen-ffmpeg-sh.py 1 100 remote daemon
+# Usage: (1) ./gen-ffmpeg-sh.py 1 10 local ~/transcoder-testing/test-with-timer.flv foreground
+# (2) ./gen-ffmpeg-sh.py 1 100 remote test-with-timer.flv daemon
 
 
 if __name__ == "__main__":
@@ -18,7 +18,7 @@ if __name__ == "__main__":
         },
         remote={
             "input_flv_file": "test-with-timer.flv",
-            "rtmp_server_domain": "127.0.0.1"
+            "rtmp_server_domain": "ingest-b0.inner.dlivecdn.com"
         }
     )
     which_env = str(sys.argv[3]) if len(sys.argv) >= 4 else 'remote'
@@ -28,15 +28,18 @@ if __name__ == "__main__":
     # 2. take in args from command line
     start_id = int(sys.argv[1]) if len(sys.argv) >= 2 else 1
     end_id = int(sys.argv[2]) if len(sys.argv) >= 3 else 1
-    daemon = '' if len(sys.argv) >= 5 and (str(sys.argv[4]) != 'daemon') else '&'
+    input_flv_file_reassign = str(sys.argv[4]) if len(sys.argv) >= 5 else input_flv_file
+    daemon = '' if len(sys.argv) >= 6 and (str(sys.argv[5]) != 'daemon') else '&'
 
     # 3. generate command line
     buf = []
     for i in range(start_id, end_id + 1):
-        line = "ffmpeg -stream_loop 2 -re -i {input_flv_file} " \
+        # NOTE: ffmpeg v3 seems has bug for -stream_loop
+        # line = "ffmpeg -stream_loop 2 -re -i {input_flv_file} " \
+        line = "ffmpeg -re -i {input_flv_file} " \
                "-f flv -c:v copy -c:a aac -strict -2 -maxrate 4M " \
                "rtmp://{rtmp_server_domain}/live/dlivetestdlivetestdlivetestdlive_dlivetest-{i} {daemon}\n".format(
-                input_flv_file=input_flv_file, rtmp_server_domain=rtmp_server_domain, i=i, daemon=daemon)
+                input_flv_file=input_flv_file_reassign, rtmp_server_domain=rtmp_server_domain, i=i, daemon=daemon)
         buf.append(line)
 
     sh_file_name = "ffmpeg-%d-%d.sh" % (start_id, end_id)
