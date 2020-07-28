@@ -1,0 +1,16 @@
+
+====m3u8 to mp4:
+ffmpeg -i "https://cfvod.kaltura.com/scf/hls/p/1926081/sp/192608100/serveFlavor/entryId/0_fq9nwxml/v/12/ev/18/flavorId/0_t6w2wg55/name/a.mp4/index.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZnZvZC5rYWx0dXJhLmNvbS9zY2YvaGxzL3AvMTkyNjA4MS9zcC8xOTI2MDgxMDAvc2VydmVGbGF2b3IvZW50cnlJZC8wX2ZxOW53eG1sL3YvMTIvZXYvMTgqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNTgzMTU5NzA5fX19XX0_&Signature=G7Bbo~vudp6MsfPQdzazwij7WkkQacugcpaLLDlaU~KSkebXEt8r-diy8GJ0lnTL~i5u3S0mPCTXtO0IWKclY2ca1vnjiugGFw-jaUc6S7mIha4bwA2Xu1zKaWhTvSq7CbM0IlAVdRTlX7bstbqvVMxMuBvovDlUDyiyY6MSXjH7~zGA406M2ze43HulogkFHBhPb4SEpluStmSpYcTTGoYhCcZf8nlAHbd6~NHW~XIFB6a10DVBBLQi5sJBPYrYxUap8r4pTXBFl~uqZIPIBjR2M-yC80BXjpD9mXWUA3H3WbB1plKtHpd-HiJHkw2D~ypTMQonCZo0RvHu1Ny0kA__&Key-Pair-Id=APKAJT6QIWSKVYK3V34A" -c copy -bsf:a aac_adtstoasc raw_27_4.0_Topics.mp4
+
+
+
+====m3u8 to vtt files
+ffmpeg -i "https://cfvod.kaltura.com/api_v3/index.php/service/caption_captionasset/action/serveWebVTT/captionAssetId/0_fgvlpwnt/segmentDuration/300/ks/djJ8MTkyNjA4MXzpjtde1WndjPXYBSzaNzslcX4y-M72JBLbBHX2oICEUbZ8bqwrFI-sGp__jo8HsGrNaVrwlWn4wSzO5qkn72efG4jTFVDcg90aNHNwkvbgoYIWkv9bUSUUa28ltQ9aXPCERyvrOk-k4acCStwhtO5hUJAQdKrZICfEy0WVnjnrJJClwbjZLcQWJJIrlFOmDBcDa5UuXmXpcve0Fl8vVfHXSssY5g6lrWc4mJ9txGu9Kfi4NLNAxxmssu2WHtMmpoRAGf7D8tW75Bfqvy4Xht42/version/42/a.m3u8" -f segment -segment_time 300 -segment_format webvtt -scodec copy out-%03d.vtt
+
+
+
+====vtt to ass
+ffmpeg -i out-000.vtt -i out-001.vtt -i out-003.vtt -i out-004.vtt -i out-005.vtt -i out-006.vtt ep3_2_arrays_part1_Mechanical_Sympathy_cation.ass
+
+====burn ass to mp4
+ffmpeg -i ep3_2_arrays_part1_Mechanical_Sympathy.mp4 -vf ass=ep3_2_arrays_part1_Mechanical_Sympathy_cation.ass subtitled_ep3_2_arrays_part1_Mechanical_Sympathy.mp4
