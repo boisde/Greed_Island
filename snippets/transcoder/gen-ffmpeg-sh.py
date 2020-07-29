@@ -6,7 +6,7 @@ from multiprocessing import Process
 from multiprocessing import set_start_method
 
 # Usage: (1) ./gen-ffmpeg-sh.py 1 10 local ~/transcoder-testing/test-with-timer.flv foreground
-# (2) ./gen-ffmpeg-sh.py 1 100 remote test-with-timer.flv daemon
+# (2) ./gen-ffmpeg-sh.py 1 100 remote 3k.flv daemon
 
 
 if __name__ == "__main__":
@@ -17,7 +17,7 @@ if __name__ == "__main__":
             "rtmp_server_domain": "127.0.0.1"
         },
         remote={
-            "input_flv_file": "test-with-timer.flv",
+            "input_flv_file": "3k.flv",
             "rtmp_server_domain": "ingest-b0.inner.dlivecdn.com"
         }
     )
