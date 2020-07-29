@@ -64,3 +64,5 @@ logs/
 .terraform/
 venv/
 *.flv
+*.mp4
+*.ass
