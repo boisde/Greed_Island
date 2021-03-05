@@ -66,3 +66,6 @@ venv/
 *.flv
 *.mp4
 *.ass
+
+node_modules/
+artifacts/
