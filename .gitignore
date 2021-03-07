@@ -67,5 +67,7 @@ venv/
 *.mp4
 *.ass
 
+# nodejs
 node_modules/
 artifacts/
+
