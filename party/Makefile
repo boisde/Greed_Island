@@ -12,5 +12,7 @@ test:
 deploy:
 	npx hardhat run scripts/deploy.ts --network rinkeby
 
+help:
+	@echo "make clean/build/deploy/test"
 
-.PHONY: all test clean
+.PHONY: all test clean help
