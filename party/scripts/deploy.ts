@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import * as fs from "fs";
 
 async function main() {
     const factory = await ethers.getContractFactory("Will"); // Counter/Will
@@ -10,6 +11,12 @@ async function main() {
     console.log("Tx hash: " + contract.deployTransaction.hash);
     // The contract is NOT deployed yet; we must wait until it is mined
     await contract.deployed();
+
+    const data = {
+        address: contract.address,
+        abi: JSON.parse(contract.interface.format('json').toString())
+    };
+    fs.writeFileSync('frontend/src/Contract.json', JSON.stringify(data));
 }
 
 main()

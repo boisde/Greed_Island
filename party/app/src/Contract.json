@@ -1,0 +1,36 @@
+{
+  "address": "0xE681f3d2A3dDC8C8FFf704B56AfaA18E224f32bf",
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "payable",
+      "payable": true,
+      "inputs": []
+    },
+    {
+      "type": "function",
+      "name": "gone",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setInheritance",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "wallet"
+        },
+        {
+          "type": "uint256",
+          "name": "inheritAmount"
+        }
+      ],
+      "outputs": []
+    }
+  ]
+}
