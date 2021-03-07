@@ -1,5 +1,7 @@
 pragma solidity ^0.7.3;
 
+import 'hardhat/console.sol';
+
 contract Will {
     address owner;
     uint fortune;
@@ -43,8 +45,10 @@ contract Will {
 
     function payout() private mustBeGone {
         for (uint i = 0; i < familyWallets.length; i++) {
+            console.log('Trying to send [%s] to [%s].', inheritance[familyWallets[i]], familyWallets[i]);
             // "transfer()" global method to transfer value
             familyWallets[i].transfer(inheritance[familyWallets[i]]);
+            console.log('Owner balance is now [%s] eth.', fortune);
         }
     }
 
