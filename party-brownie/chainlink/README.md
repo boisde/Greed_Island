@@ -126,7 +126,11 @@ Kovan and Rinkeby are currently supported
 ```bash
 brownie test --network kovan
 ```
-
+### To deploy in local
+```bash
+python scripts/export_env.py
+brownie run scripts/price_feed_scripts/deploy_price_consumer_v3.py --network rinkeby
+```
 ## Adding additional Chains
 
 If the blockchain is EVM Compatible, adding new chains can be accomplished by something like:
