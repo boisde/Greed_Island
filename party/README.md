@@ -15,6 +15,7 @@ npm install -g ganache-cli
 ### NPM --save-dev Dependencies
 ```shell script
 npm install --save-dev hardhat
+npm install @openzeppelin/contracts
 npm install --save-dev hardhat-typechain typechain ts-generator @typechain/ethers-v5
 ```
 
