@@ -2,6 +2,7 @@ all: clean build test deploy
 
 clean:
 	rm -rf artifacts/
+	npx hardhat clean
 
 build:
 	npx hardhat compile
@@ -20,4 +21,4 @@ help:
 	@echo "make clean/build/deploy/test"
 
 
-.PHONY: all test clean help
+.PHONY: all test clean help build
