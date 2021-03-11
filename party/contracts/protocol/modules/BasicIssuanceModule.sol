@@ -87,18 +87,18 @@ contract BasicIssuanceModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         uint256 _quantity,
         address _to
-    )
-    external
-    nonReentrant
-    onlyValidAndInitializedSet(_setToken)
+    ) 
+        external
+        nonReentrant
+        onlyValidAndInitializedSet(_setToken)
     {
         require(_quantity > 0, "Issue quantity must be > 0");
 
         address hookContract = _callPreIssueHooks(_setToken, _quantity, msg.sender, _to);
 
         (
-        address[] memory components,
-        uint256[] memory componentQuantities
+            address[] memory components,
+            uint256[] memory componentQuantities
         ) = getRequiredComponentUnitsForIssue(_setToken, _quantity);
 
         // For each position, transfer the required underlying to the SetToken
@@ -131,9 +131,9 @@ contract BasicIssuanceModule is ModuleBase, ReentrancyGuard {
         uint256 _quantity,
         address _to
     )
-    external
-    nonReentrant
-    onlyValidAndInitializedSet(_setToken)
+        external
+        nonReentrant
+        onlyValidAndInitializedSet(_setToken)
     {
         require(_quantity > 0, "Redeem quantity must be > 0");
 
@@ -173,9 +173,9 @@ contract BasicIssuanceModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         IManagerIssuanceHook _preIssueHook
     )
-    external
-    onlySetManager(_setToken, msg.sender)
-    onlyValidAndPendingSet(_setToken)
+        external
+        onlySetManager(_setToken, msg.sender)
+        onlyValidAndPendingSet(_setToken)
     {
         managerIssuanceHook[_setToken] = _preIssueHook;
 
@@ -204,10 +204,10 @@ contract BasicIssuanceModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         uint256 _quantity
     )
-    public
-    view
-    onlyValidAndInitializedSet(_setToken)
-    returns (address[] memory, uint256[] memory)
+        public
+        view
+        onlyValidAndInitializedSet(_setToken)
+        returns (address[] memory, uint256[] memory)
     {
         address[] memory components = _setToken.getComponents();
 
@@ -234,8 +234,8 @@ contract BasicIssuanceModule is ModuleBase, ReentrancyGuard {
         address _caller,
         address _to
     )
-    internal
-    returns(address)
+        internal
+        returns(address)
     {
         IManagerIssuanceHook preIssueHook = managerIssuanceHook[_setToken];
         if (address(preIssueHook) != address(0)) {

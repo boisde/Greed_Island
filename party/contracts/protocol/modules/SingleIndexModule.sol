@@ -1,14 +1,18 @@
 /*
     Copyright 2020 Set Labs Inc.
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
     SPDX-License-Identifier: Apache License, Version 2.0
 */
 
@@ -136,8 +140,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         address _sushiswapRouter,
         address _balancerProxy
     )
-    public
-    ModuleBase(_controller)
+        public
+        ModuleBase(_controller)
     {
         weth = _weth;
         uniswapRouter = _uniswapRouter;
@@ -163,9 +167,9 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256[] calldata _oldComponentsTargetUnits,
         uint256 _positionMultiplier
     )
-    external
-    onlyManagerAndValidSet(index)
-    {
+        external
+        onlyManagerAndValidSet(index)
+    {   
         // Don't use validate arrays because empty arrays are valid
         require(_newComponents.length == _newComponentsTargetUnits.length, "Array length mismatch");
 
@@ -202,8 +206,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         _validateTradeParameters(_component);
 
         (
-        bool isBuy,
-        uint256 tradeAmount
+            bool isBuy,
+            uint256 tradeAmount
         ) = _calculateTradeSizeAndDirection(_component);
 
         if (isBuy) {
@@ -236,7 +240,7 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         _executeTrade(address(weth), _component, true, preTradeWethAmount, assetInfo[_component].exchange);
 
         (,
-        uint256 componentTradeSize
+            uint256 componentTradeSize
         ) = _updatePositionState(address(weth), _component, preTradeWethAmount, preTradeComponentAmount);
 
         require(componentTradeSize < tradeLimit, "Trade size exceeds trade size limit");
@@ -268,8 +272,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         address[] calldata _components,
         uint256[] calldata _tradeMaximums
     )
-    external
-    onlyManagerAndValidSet(index)
+        external
+        onlyManagerAndValidSet(index)
     {
         _validateArrays(_components, _tradeMaximums);
 
@@ -289,8 +293,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         address[] calldata _components,
         uint256[] calldata _exchanges
     )
-    external
-    onlyManagerAndValidSet(index)
+        external
+        onlyManagerAndValidSet(index)
     {
         _validateArrays(_components, _exchanges);
 
@@ -313,8 +317,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         address[] calldata _components,
         uint256[] calldata _coolOffPeriods
     )
-    external
-    onlyManagerAndValidSet(index)
+        external
+        onlyManagerAndValidSet(index)
     {
         _validateArrays(_components, _coolOffPeriods);
 
@@ -359,9 +363,9 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
      * @param _index            Address of index being used for this Set
      */
     function initialize(ISetToken _index)
-    external
-    onlySetManager(_index, msg.sender)
-    onlyValidAndPendingSet(_index)
+        external
+        onlySetManager(_index, msg.sender)
+        onlyValidAndPendingSet(_index)
     {
         require(address(index) == address(0), "Module already in use");
 
@@ -389,7 +393,7 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
      */
     function getTargetUnits(address[] calldata _components) external view returns(uint256[] memory) {
         uint256 currentPositionMultiplier = index.positionMultiplier().toUint256();
-
+        
         uint256[] memory targetUnits = new uint256[](_components.length);
         for (uint256 i = 0; i < _components.length; i++) {
             targetUnits[i] = _normalizeTargetUnit(_components[i], currentPositionMultiplier);
@@ -438,7 +442,7 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256 targetNotional = totalSupply.preciseMulCeil(targetUnit);
 
         return targetNotional > currentNotional ? (true, componentMaxSize.min(targetNotional.sub(currentNotional))) :
-        (false, componentMaxSize.min(currentNotional.sub(targetNotional)));
+            (false, componentMaxSize.min(currentNotional.sub(targetNotional)));
     }
 
     /**
@@ -475,16 +479,16 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256 _amount,
         uint256 _exchange
     )
-    internal
-    virtual
+        internal
+        virtual
     {
         uint256 wethBalance = weth.balanceOf(address(index));
-
+        
         (
-        address exchangeAddress,
-        bytes memory tradeCallData
+            address exchangeAddress,
+            bytes memory tradeCallData
         ) = _exchange == uint256(ExchangeId.Balancer) ? _getBalancerTradeData(_sellComponent, _buyComponent, _fixIn, _amount, wethBalance) :
-        _getUniswapLikeTradeData(_sellComponent, _buyComponent, _fixIn, _amount, _exchange);
+            _getUniswapLikeTradeData(_sellComponent, _buyComponent, _fixIn, _amount, _exchange);
 
         uint256 approveAmount = _sellComponent == address(weth) ? wethBalance : _amount;
         index.invokeApprove(_sellComponent, exchangeAddress, approveAmount);
@@ -500,8 +504,8 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256 _preTradeSellComponentAmount,
         uint256 _preTradeBuyComponentAmount
     )
-    internal
-    returns (uint256 sellAmount, uint256 buyAmount)
+        internal
+        returns (uint256 sellAmount, uint256 buyAmount)
     {
         uint256 totalSupply = index.totalSupply();
 
@@ -538,14 +542,14 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256 _amount,
         uint256 _maxOut
     )
-    internal
-    view
-    returns(address, bytes memory)
+        internal
+        view
+        returns(address, bytes memory)
     {
         address exchangeAddress = balancerProxy;
         (
-        string memory functionSignature,
-        uint256 limit
+            string memory functionSignature,
+            uint256 limit
         ) = _fixIn ? (BALANCER_IN, 1) : (BALANCER_OUT, _maxOut);
 
         bytes memory tradeCallData = abi.encodeWithSignature(
@@ -557,7 +561,7 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
             BALANCER_POOL_LIMIT
         );
 
-        return (exchangeAddress, tradeCallData);
+        return (exchangeAddress, tradeCallData);       
     }
 
     /**
@@ -570,12 +574,12 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         uint256 _amount,
         uint256 _exchange
     )
-    internal
-    view
-    returns(address, bytes memory)
+        internal
+        view
+        returns(address, bytes memory)
     {
         address exchangeAddress = _exchange == uint256(ExchangeId.Uniswap) ? uniswapRouter : sushiswapRouter;
-
+        
         string memory functionSignature;
         address[] memory path = new address[](2);
         uint256 limit;
@@ -588,7 +592,7 @@ contract SingleIndexModule is ModuleBase, ReentrancyGuard {
         }
         path[0] = _sellComponent;
         path[1] = _buyComponent;
-
+        
         bytes memory tradeCallData = abi.encodeWithSignature(
             functionSignature,
             _amount,

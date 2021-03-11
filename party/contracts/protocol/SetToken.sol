@@ -37,7 +37,7 @@ import { AddressArrayUtils } from "../lib/AddressArrayUtils.sol";
  * @author Set Protocol
  *
  * ERC20 Token contract that allows privileged modules to make modifications to its positions and invoke function calls
- * from the SetToken.
+ * from the SetToken. 
  */
 contract SetToken is ERC20 {
     using SafeMath for uint256;
@@ -61,7 +61,7 @@ contract SetToken is ERC20 {
 
     event Invoked(address indexed _target, uint indexed _value, bytes _data, bytes _returnValue);
     event ModuleAdded(address indexed _module);
-    event ModuleRemoved(address indexed _module);
+    event ModuleRemoved(address indexed _module);    
     event ModuleInitialized(address indexed _module);
     event ManagerEdited(address _newManager, address _oldManager);
     event PendingModuleRemoved(address indexed _module);
@@ -142,7 +142,7 @@ contract SetToken is ERC20 {
 
     /**
      * When a new SetToken is created, initializes Positions in default state and adds modules into pending state.
-     * All parameter validations are on the SetTokenCreator contract. Validations are performed already on the
+     * All parameter validations are on the SetTokenCreator contract. Validations are performed already on the 
      * SetTokenCreator. Initiates the positionMultiplier as 1e18 (no adjustments).
      *
      * @param _components             List of addresses of components for initial Positions
@@ -162,8 +162,8 @@ contract SetToken is ERC20 {
         string memory _name,
         string memory _symbol
     )
-    public
-    ERC20(_name, _symbol)
+        public
+        ERC20(_name, _symbol)
     {
         controller = _controller;
         manager = _manager;
@@ -197,10 +197,10 @@ contract SetToken is ERC20 {
         uint256 _value,
         bytes calldata _data
     )
-    external
-    onlyModule
-    whenLockedOnlyLocker
-    returns (bytes memory _returnValue)
+        external
+        onlyModule
+        whenLockedOnlyLocker
+        returns (bytes memory _returnValue)
     {
         _returnValue = _target.functionCallWithValue(_data, _value);
 
@@ -249,16 +249,16 @@ contract SetToken is ERC20 {
     }
 
     /**
-     * PRIVELEGED MODULE FUNCTION. Low level function that removes a module from a component's
+     * PRIVELEGED MODULE FUNCTION. Low level function that removes a module from a component's 
      * externalPositionModules array and deletes the associated externalPosition.
      */
     function removeExternalPositionModule(
         address _component,
         address _positionModule
     )
-    external
-    onlyModule
-    whenLockedOnlyLocker
+        external
+        onlyModule
+        whenLockedOnlyLocker
     {
         componentPositions[_component].externalPositionModules = _externalPositionModules(_component).remove(_positionModule);
         delete componentPositions[_component].externalPositions[_positionModule];
@@ -267,7 +267,7 @@ contract SetToken is ERC20 {
     }
 
     /**
-     * PRIVELEGED MODULE FUNCTION. Low level function that edits a component's external position virtual unit.
+     * PRIVELEGED MODULE FUNCTION. Low level function that edits a component's external position virtual unit. 
      * Takes a real unit and converts it to virtual before committing.
      */
     function editExternalPositionUnit(
@@ -275,9 +275,9 @@ contract SetToken is ERC20 {
         address _positionModule,
         int256 _realUnit
     )
-    external
-    onlyModule
-    whenLockedOnlyLocker
+        external
+        onlyModule
+        whenLockedOnlyLocker
     {
         int256 virtualUnit = _convertRealToVirtualUnit(_realUnit);
 
@@ -294,9 +294,9 @@ contract SetToken is ERC20 {
         address _positionModule,
         bytes calldata _data
     )
-    external
-    onlyModule
-    whenLockedOnlyLocker
+        external
+        onlyModule
+        whenLockedOnlyLocker
     {
         componentPositions[_component].externalPositions[_positionModule].data = _data;
 
@@ -350,7 +350,7 @@ contract SetToken is ERC20 {
     }
 
     /**
-     * MANAGER ONLY. Adds a module into a PENDING state; Module must later be initialized via
+     * MANAGER ONLY. Adds a module into a PENDING state; Module must later be initialized via 
      * module's initialize function
      */
     function addModule(address _module) external onlyManager {
@@ -399,7 +399,7 @@ contract SetToken is ERC20 {
     function initializeModule() external {
         require(!isLocked, "Only when unlocked");
         require(moduleStates[msg.sender] == ISetToken.ModuleState.PENDING, "Module must be pending");
-
+        
         moduleStates[msg.sender] = ISetToken.ModuleState.INITIALIZED;
         modules.push(msg.sender);
 
@@ -481,11 +481,11 @@ contract SetToken is ERC20 {
             // A default position exists if the default virtual unit is > 0
             if (_defaultPositionVirtualUnit(component) > 0) {
                 positions[positionCount] = ISetToken.Position({
-                component: component,
-                module: address(0),
-                unit: getDefaultPositionRealUnit(component),
-                positionState: DEFAULT,
-                data: ""
+                    component: component,
+                    module: address(0),
+                    unit: getDefaultPositionRealUnit(component),
+                    positionState: DEFAULT,
+                    data: ""
                 });
 
                 positionCount++;
@@ -496,11 +496,11 @@ contract SetToken is ERC20 {
                 address currentModule = externalModules[j];
 
                 positions[positionCount] = ISetToken.Position({
-                component: component,
-                module: currentModule,
-                unit: getExternalPositionRealUnit(component, currentModule),
-                positionState: EXTERNAL,
-                data: _externalPositionData(component, currentModule)
+                    component: component,
+                    module: currentModule,
+                    unit: getExternalPositionRealUnit(component, currentModule),
+                    positionState: EXTERNAL,
+                    data: _externalPositionData(component, currentModule)
                 });
 
                 positionCount++;
@@ -585,7 +585,7 @@ contract SetToken is ERC20 {
             // Increment the position count by each external position module
             address[] memory externalModules = _externalPositionModules(component);
             if (externalModules.length > 0) {
-                positionCount = positionCount.add(externalModules.length);
+                positionCount = positionCount.add(externalModules.length);  
             }
         }
 

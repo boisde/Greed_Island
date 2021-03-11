@@ -95,8 +95,8 @@ contract StreamingFeeModule is ModuleBase, ReentrancyGuard {
 
             // Mint new Sets to manager and protocol
             (
-            managerFee,
-            protocolFee
+                managerFee,
+                protocolFee
             ) = _mintManagerAndProtocolFee(_setToken, feeQuantity);
 
             _editPositionMultiplier(_setToken, inflationFeePercentage);
@@ -118,9 +118,9 @@ contract StreamingFeeModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         FeeState memory _settings
     )
-    external
-    onlySetManager(_setToken, msg.sender)
-    onlyValidAndPendingSet(_setToken)
+        external
+        onlySetManager(_setToken, msg.sender)
+        onlyValidAndPendingSet(_setToken)
     {
         require(_settings.feeRecipient != address(0), "Fee Recipient must be non-zero address.");
         require(_settings.maxStreamingFeePercentage < PreciseUnitMath.preciseUnit(), "Max fee must be < 100%.");
@@ -151,9 +151,9 @@ contract StreamingFeeModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         uint256 _newFee
     )
-    external
-    onlySetManager(_setToken, msg.sender)
-    onlyValidAndInitializedSet(_setToken)
+        external
+        onlySetManager(_setToken, msg.sender)
+        onlyValidAndInitializedSet(_setToken)
     {
         require(_newFee < _maxStreamingFeePercentage(_setToken), "Fee must be less than max");
         accrueFee(_setToken);
@@ -170,9 +170,9 @@ contract StreamingFeeModule is ModuleBase, ReentrancyGuard {
      * @param _newFeeRecipient      New fee recipient
      */
     function updateFeeRecipient(ISetToken _setToken, address _newFeeRecipient)
-    external
-    onlySetManager(_setToken, msg.sender)
-    onlyValidAndInitializedSet(_setToken)
+        external
+        onlySetManager(_setToken, msg.sender)
+        onlyValidAndInitializedSet(_setToken)
     {
         require(_newFeeRecipient != address(0), "Fee Recipient must be non-zero address.");
 
@@ -225,9 +225,9 @@ contract StreamingFeeModule is ModuleBase, ReentrancyGuard {
         ISetToken _setToken,
         uint256 _feePercentage
     )
-    internal
-    view
-    returns (uint256)
+        internal
+        view
+        returns (uint256)
     {
         uint256 totalSupply = _setToken.totalSupply();
 
