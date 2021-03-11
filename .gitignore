@@ -76,3 +76,4 @@ package-lock.json
 yarn.lock
 .eslintcache
 env.yaml
+.env
