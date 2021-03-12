@@ -4,11 +4,11 @@ import chai from "chai";
 import { Will } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-import { profiler } from "@0x/contracts-test-utils";
+// import { profiler } from "@0x/contracts-test-utils";
 // chai.use(solidity);
 const { expect } = chai;
 
-profiler.start()
+// profiler.start()
 describe('Will', () => {
     let will: Will;
     let owner: SignerWithAddress;
@@ -30,4 +30,4 @@ describe('Will', () => {
 
     });
 });
-profiler.stop()
+// profiler.stop()
