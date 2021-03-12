@@ -5,6 +5,7 @@ import { HardhatUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-etherscan"
 import "hardhat-typechain";
+import "hardhat-gas-reporter"
 
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
@@ -22,5 +23,9 @@ const config: HardhatUserConfig = {
         // Obtain one at https://etherscan.io/
         apiKey: process.env.ETHERSCAN_API_KEY,
     },
+    gasReporter: {
+        currency: 'CNY',
+        gasPrice: 1,
+    }
 };
 export default config;
