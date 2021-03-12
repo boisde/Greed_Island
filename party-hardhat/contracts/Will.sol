@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.3;
 
 import 'hardhat/console.sol';
@@ -14,7 +15,7 @@ contract Will {
     // 2. The “payable” keyword: It allows the function to send and receive ether. The
     // constructor has this modifier so that when we deploy the contract we can initialize
     // it with an ether balance.
-    constructor() public payable{
+    constructor() payable{
         /*
         * @msg.sender, a built-in global variable representative of the address that is calling the function.
         * @msg.value, a built-in variable that tells us how much ether has been sent.
