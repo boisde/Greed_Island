@@ -10,6 +10,16 @@ const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     solidity: {
         compilers: [{ version: "0.7.3", settings: {} }],
+        overrides: {
+            "contracts/Papi.sol": {
+                version: "0.7.6",
+                settings: {}
+            },
+            "contracts/provableAPI_0.7.sol": {
+                version: "0.7.6",
+                settings: {}
+            }
+        }
     },
     networks: {
         hardhat: {},

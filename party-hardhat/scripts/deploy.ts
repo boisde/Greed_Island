@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import * as fs from "fs";
 
 async function main() {
-    const factory = await ethers.getContractFactory("Will"); // Counter/Will
+    const factory = await ethers.getContractFactory("DieselPrice"); // Counter/Will
     // If we had constructor arguments, they would be passed into deploy()
     let contract = await factory.deploy();
     // The address the Contract WILL have once mined
@@ -12,11 +12,11 @@ async function main() {
     // The contract is NOT deployed yet; we must wait until it is mined
     await contract.deployed();
 
-    const data = {
-        address: contract.address,
-        abi: JSON.parse(contract.interface.format('json').toString())
-    };
-    fs.writeFileSync('frontend/src/Contract.json', JSON.stringify(data));
+    // const data = {
+    //     address: contract.address,
+    //     abi: JSON.parse(contract.interface.format('json').toString())
+    // };
+    // fs.writeFileSync('frontend/src/Contract.json', JSON.stringify(data));
 }
 
 main()
